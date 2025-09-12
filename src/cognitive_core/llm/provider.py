@@ -66,7 +66,10 @@ class OpenAIAdapter(LLMProvider):
 
         cost = 0.0
         try:
-            if os.environ.get("ENABLE_COST_CALC", "false").lower() in ("1", "true", "yes") and usage:
+            if (
+                os.environ.get("ENABLE_COST_CALC", "false").lower() in ("1", "true", "yes")
+                and usage
+            ):
                 cost = compute_cost_from_usage(self.model, usage)
         except Exception:
             cost = 0.0
@@ -80,4 +83,3 @@ def get_provider():
     if name == "openai":
         return OpenAIAdapter()
     return MockProvider()
-
