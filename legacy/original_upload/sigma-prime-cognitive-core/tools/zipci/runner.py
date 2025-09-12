@@ -1,17 +1,20 @@
 from __future__ import annotations
-import json
+
 from dataclasses import dataclass
 from typing import Any
+
+from ....github.scripts.zipci_lib import check_zip_safety  # type: ignore
 from .util import to_json
-from ... .github.scripts.zipci_lib import check_zip_safety  # type: ignore
+
 
 @dataclass
 class Args:
     zip: str
     max_files: int = 20000
-    max_total: int = 250*1024*1024
-    max_per_file: int = 50*1024*1024
+    max_total: int = 250 * 1024 * 1024
+    max_per_file: int = 50 * 1024 * 1024
     max_ratio: float = 120.0
+
 
 def run_scan(ns: Any) -> bool:
     reasons = check_zip_safety(ns.zip, ns.max_files, ns.max_total, ns.max_per_file, ns.max_ratio)

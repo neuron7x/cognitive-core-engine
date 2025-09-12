@@ -1,1 +1,1 @@
-__all__ = ['logsumexp', 'stable_softmax', 'welford_variance']
+__all__ = ["logsumexp", "stable_softmax", "welford_variance"]

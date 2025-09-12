@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.integration
 def test_sse_events(api_client):
     r = api_client.get("/api/events/sse", stream=True)
