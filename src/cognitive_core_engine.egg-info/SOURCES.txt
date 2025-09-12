@@ -2,6 +2,7 @@ LICENSE
 README.md
 pyproject.toml
 src/cognitive_core/__init__.py
+src/cognitive_core/api.py
 src/cognitive_core/cli.py
 src/cognitive_core/db.py
 src/cognitive_core/rate_limiter.py
@@ -14,6 +15,7 @@ src/cognitive_core/app/__init__.py
 src/cognitive_core/app/services.py
 src/cognitive_core/config/__init__.py
 src/cognitive_core/config/settings.py
+src/cognitive_core/core/math_utils.py
 src/cognitive_core/domain/__init__.py
 src/cognitive_core/domain/entities.py
 src/cognitive_core/llm/costs.py
@@ -21,6 +23,7 @@ src/cognitive_core/llm/provider.py
 src/cognitive_core/llm/provider_async.py
 src/cognitive_core/llm/provider_wrapper.py
 src/cognitive_core/plugins/__init__.py
+src/cognitive_core/plugins/registry.py
 src/cognitive_core/plugins/example/__init__.py
 src/cognitive_core/plugins/example/math_plugin.py
 src/cognitive_core/utils/__init__.py
@@ -28,6 +31,7 @@ src/cognitive_core/utils/logging.py
 src/cognitive_core_engine.egg-info/PKG-INFO
 src/cognitive_core_engine.egg-info/SOURCES.txt
 src/cognitive_core_engine.egg-info/dependency_links.txt
+src/cognitive_core_engine.egg-info/entry_points.txt
 src/cognitive_core_engine.egg-info/requires.txt
 src/cognitive_core_engine.egg-info/top_level.txt
 tests/test_cli.py

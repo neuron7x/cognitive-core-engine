@@ -13,16 +13,9 @@ isort>=5.13
 mypy>=1.8
 types-requests
 
-[docs]
-mkdocs>=1.5
-mkdocs-material>=9.5
-
-[security]
-bandit>=1.7.5
-pip-audit>=2.7
-
 [test]
 pytest>=7.4
 pytest-cov>=4.1
 httpx>=0.25
 hypothesis>=6.99
+pyyaml>=6.0.1

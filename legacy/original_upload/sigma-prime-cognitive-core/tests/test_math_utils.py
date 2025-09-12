@@ -1,5 +1,6 @@
 import numpy as np
 from hypothesis import given, strategies as st
+
 from tools.algorithms.math_utils import logsumexp, stable_softmax, welford_variance
 
 
