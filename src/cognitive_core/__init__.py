@@ -1,1 +1,1 @@
-__all__ = ["domain", "app", "adapters", "infra", "api", "config", "utils", "plugins"]
+__version__ = '0.1.0'

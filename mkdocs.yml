@@ -1,8 +1,1 @@
-site_name: Cognitive Core Engine
-theme:
-  name: mkdocs
-nav:
-  - Overview: docs/ARCHITECTURE.md
-  - API: docs/API.md
-  - Ops: docs/OPERATIONS.md
-  - Changelog: CHANGELOG.md
+site_name: cognitive-core-engine\n
