@@ -1,3 +1,8 @@
+repository:
+  has_pages: true
+  pages:
+    build_type: workflow
+
 branches:
   - name: main
     protection:
