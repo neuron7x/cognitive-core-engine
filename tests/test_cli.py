@@ -1,9 +1,14 @@
-import subprocess, json, shlex
+import json
+import shlex
+import subprocess
+
 import pytest
+
 
 def _run(cmd: str):
     proc = subprocess.run(shlex.split(cmd), capture_output=True, text=True)
     return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+
 
 @pytest.mark.integration
 def test_cli_dotv():
@@ -19,6 +24,7 @@ def test_cli_dotv():
             assert abs(val - 32.0) < 1e-9
             return
     pytest.skip("CLI not available")
+
 
 @pytest.mark.integration
 def test_cli_solve2x2():

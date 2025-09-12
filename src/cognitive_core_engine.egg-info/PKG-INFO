@@ -1,0 +1,29 @@
+Metadata-Version: 2.4
+Name: cognitive-core-engine
+Version: 0.0.0
+Requires-Python: >=3.10
+License-File: LICENSE
+Requires-Dist: pydantic>=2.7
+Requires-Dist: typing-extensions>=4.8
+Provides-Extra: api
+Requires-Dist: fastapi>=0.111; extra == "api"
+Requires-Dist: uvicorn>=0.29; extra == "api"
+Requires-Dist: httpx>=0.25; extra == "api"
+Provides-Extra: test
+Requires-Dist: pytest>=7.4; extra == "test"
+Requires-Dist: pytest-cov>=4.1; extra == "test"
+Requires-Dist: httpx>=0.25; extra == "test"
+Requires-Dist: hypothesis>=6.99; extra == "test"
+Provides-Extra: dev
+Requires-Dist: ruff>=0.5.0; extra == "dev"
+Requires-Dist: black>=24.4; extra == "dev"
+Requires-Dist: isort>=5.13; extra == "dev"
+Requires-Dist: mypy>=1.8; extra == "dev"
+Requires-Dist: types-requests; extra == "dev"
+Provides-Extra: security
+Requires-Dist: bandit>=1.7.5; extra == "security"
+Requires-Dist: pip-audit>=2.7; extra == "security"
+Provides-Extra: docs
+Requires-Dist: mkdocs>=1.5; extra == "docs"
+Requires-Dist: mkdocs-material>=9.5; extra == "docs"
+Dynamic: license-file

@@ -1,6 +1,7 @@
 import importlib
 import pkgutil
 from typing import Optional
+
 import pytest
 
 # Якщо FastAPI відсутній локально — ввічливо скіпаємо інтеграційні тести

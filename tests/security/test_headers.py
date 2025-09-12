@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.integration
 def test_default_security_headers(api_client):
     r = api_client.get("/api/health")

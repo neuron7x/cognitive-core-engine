@@ -1,6 +1,9 @@
 
 from __future__ import annotations
+
 import os
+
+
 class LLMProvider:
     def run(self, prompt: str, **kw) -> dict: raise NotImplementedError
 
@@ -19,7 +22,9 @@ class OpenAIAdapter(LLMProvider):
     def run(self, prompt: str, **kwargs) -> dict:
         # Live implementation using requests. Requires 'requests' package and network access.
         import os, json
+
 from .costs import compute_cost_from_usage
+
         if not self.key:
             raise RuntimeError("OpenAIAdapter requires OPENAI_API_KEY in environment.")
         payload = {

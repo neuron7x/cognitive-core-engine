@@ -1,13 +1,16 @@
-
 from __future__ import annotations
+
 import os
+
 try:
     import httpx
 except Exception:
     httpx = None
 
+
 class OpenAIAsyncAdapter:
     name = "openai-async"
+
     def __init__(self, key: str | None = None, model: str = "gpt-4o-mini"):
         self.key = key or os.environ.get("OPENAI_API_KEY")
         self.model = model

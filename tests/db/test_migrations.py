@@ -1,4 +1,10 @@
-import os, subprocess, shutil, tempfile, pytest
+import os
+import shutil
+import subprocess
+import tempfile
+
+import pytest
+
 
 def test_alembic_migrations_smoke():
     if shutil.which("alembic") is None:
@@ -11,7 +17,11 @@ def test_alembic_migrations_smoke():
     with tempfile.TemporaryDirectory() as d:
         env = os.environ.copy()
         env["DATABASE_URL"] = "sqlite:///" + os.path.join(d, "t.sqlite3")
-        proc = subprocess.run(["alembic", "upgrade", "head"], env=env, capture_output=True, text=True)
+        proc = subprocess.run(
+            ["alembic", "upgrade", "head"], env=env, capture_output=True, text=True
+        )
         assert proc.returncode == 0, proc.stderr
-        proc = subprocess.run(["alembic", "downgrade", "base"], env=env, capture_output=True, text=True)
+        proc = subprocess.run(
+            ["alembic", "downgrade", "base"], env=env, capture_output=True, text=True
+        )
         assert proc.returncode == 0, proc.stderr
