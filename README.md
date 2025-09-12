@@ -1,5 +1,8 @@
 # Cognitive Core Engine
 
+![CI](https://github.com/neuron7x/cognitive-core-engine/actions/workflows/ci.yml/badge.svg)
+![CodeQL](https://github.com/neuron7x/cognitive-core-engine/actions/workflows/codeql.yml/badge.svg)
+
 **Version:** v0.1.0 · **Release:** 2025-09-12
 
 - API: FastAPI (`/api/health`, `/api/dot`, `/api/solve2x2`, `/api/events/sse`)
