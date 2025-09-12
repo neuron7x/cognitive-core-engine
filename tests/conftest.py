@@ -4,9 +4,12 @@ from typing import Optional
 
 import pytest
 
+# Якщо FastAPI відсутній локально — ввічливо скіпаємо інтеграційні тести
 try:
+    import fastapi  # noqa: F401
     from fastapi.testclient import TestClient  # type: ignore
 except Exception:  # pragma: no cover
+    pytest.skip("fastapi[test] not installed; skipping API tests", allow_module_level=True)
     TestClient = None  # type: ignore
 
 
@@ -32,7 +35,7 @@ def _find_fastapi_app() -> Optional[object]:
         except Exception:
             pass
 
-    # deep scan
+    # deep scan; ігноруємо модулі, що не імпортуються
     try:
         for m in pkgutil.walk_packages(pkg.__path__, pkg.__name__ + "."):
             try:
@@ -50,8 +53,6 @@ def _find_fastapi_app() -> Optional[object]:
 
 @pytest.fixture(scope="session")
 def api_client():
-    if TestClient is None:
-        pytest.skip("fastapi[test] not installed")
     app = _find_fastapi_app()
     if app is None:
         pytest.skip("FastAPI app not found in cognitive_core")
