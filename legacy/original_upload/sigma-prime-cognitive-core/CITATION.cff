@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Please cite this work if you use it."
+title: "Sigma-Prime Cognitive Core"
+authors:
+  - family-names: Vaylenko
+    given-names: Yaroslav
+date-released: 2025-09-11
+version: "0.1.0"
+doi: ""
+license: "MIT"

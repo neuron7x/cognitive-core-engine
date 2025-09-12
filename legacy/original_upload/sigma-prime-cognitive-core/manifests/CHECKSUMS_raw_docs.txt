@@ -1,0 +1,7 @@
+919bf4a802d091a8742fddc22a9f3e1e35a911c1b71bb1b78ae5b5168628f09e  docs/raw/Валідація.odt
+0394aa89b9936ede58b75886aedde27bb2b857f27c6cc468eb82c0ce6f4684e5  docs/raw/Енігма повна 0.1 версія.odt
+99b72e1e5895a9e54646fa6cc90d275b69f38407f0873e053a2900ffc969d76c  docs/raw/Нейрофізіо-Біоінформатична Система “Фрактального Я.odt
+f7cf05e87ce4571cdca10257e6b05b2b45d8c86479d2a68e524be3378b7f4982  docs/raw/Цифрова структура Ярослава.odt
+519d8741b39b024ab974ce31180168c80f9928d09db46c21de92044ca54bae83  docs/raw/Ядро Agi Yaroslav Vasilenko.odt
+9e7df5ff0c2f4843adc53c56e41f61296290a0a71599de6d184b74b4216354b0  docs/raw/свідомість в мікротрубочках Дослід.odt
+23c067bb347b6de911b7889ee5ce59fc8b3f45934d2ace6ffaf9244947dcb2a5  docs/raw/цифрова капсула свідомості.odt

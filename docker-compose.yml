@@ -1,0 +1,8 @@
+services:
+  api:
+    build: .
+    image: ghcr.io/yourorg/cognitive-core-engine:dev
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
