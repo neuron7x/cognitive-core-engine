@@ -1,69 +1,63 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cognitive-core-engine"
-version = "0.1.0"
-description = "Cognitive Core Engine with FastAPI API, math services, and plugin registry."
-readme = "README.md"
-requires-python = ">=3.11"
-license = {text = "MIT"}
-authors = [{name="Yaroslav"}]
-classifiers = [
-  "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
-  "Framework :: FastAPI",
-]
+version = "0.0.0"
+requires-python = ">=3.10"
 dependencies = [
-  "fastapi>=0.111.0",
-  "uvicorn>=0.29.0",
-  "pydantic>=2.7.0",
-  "pydantic-settings>=2.2.0",
-  "anyio>=4.4.0"
-  "fastapi>=0.112",
-  "uvicorn[standard]>=0.30",
   "pydantic>=2.7",
-  "pydantic-settings>=2.3",
-  "typer>=0.12",
-  "anyio>=4.4",
-  "requests>=2.32",
-  "redis>=5.0",
-  "SQLAlchemy>=2.0",
-  "alembic>=1.13",
-  "psycopg2-binary>=2.9",
-  "prometheus-client>=0.20",
-  "structlog>=24.1",
+  "typing-extensions>=4.8",
 ]
 
 [project.optional-dependencies]
-dev = [
-  "pytest>=8.0.0",
-  "httpx>=0.27.0",
-  "pytest-benchmark>=4.0.0",
-  "ruff>=0.6.8",
-  "black>=24.8.0",
-  "isort>=5.13.2",
-  "pre-commit>=3.7.0"
+api = [
+  "fastapi>=0.111",
+  "uvicorn>=0.29",
+  "httpx>=0.25",
 ]
-
-[project.scripts]
-cogctl = "cognitive_core.cli:app"
-
-[tool.pytest.ini_options]
-addopts = "-q --disable-warnings --maxfail=1 --cov=src/cognitive_core --cov-report=term-missing"
-testpaths = ["tests"]
+test = [
+  "pytest>=7.4",
+  "pytest-cov>=4.1",
+  "httpx>=0.25",
+  "hypothesis>=6.99",
+]
+dev = [
+  "ruff>=0.5.0",
+  "black>=24.4",
+  "isort>=5.13",
+  "mypy>=1.8",
+  "types-requests",
+]
+security = [
+  "bandit>=1.7.5",
+  "pip-audit>=2.7",
+]
+docs = [
+  "mkdocs>=1.5",
+  "mkdocs-material>=9.5",
+]
+[tool.black]
+line-length = 100
+target-version = ["py310","py311","py312"]
 
 [tool.isort]
 profile = "black"
+line_length = 100
+combine_as_imports = true
+known_first_party = ["cognitive_core"]
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ["py312"]
+target-version = "py310"
+select = ["E","F","I"]  # базові помилки/імпорти
+ignore = [
+  "E203", "E266", "E501",  # сумісність із black, довгі рядки не ламаємо
+  "F401", "F841",          # тимчасово ігноруємо невикор. імпорти/змінні
+]
+src = ["src","cognitive_core","."]
 
-[tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.pytest.ini_options]
+addopts = "-q -ra --strict-markers --disable-warnings --maxfail=1"
+testpaths = ["tests"]
