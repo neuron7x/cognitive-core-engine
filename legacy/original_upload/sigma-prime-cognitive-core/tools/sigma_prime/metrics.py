@@ -2,9 +2,11 @@
 Sigma-Prime metrics — operational definitions for cognitive state dynamics.
 Implements Φ, Ψ, Ε, Τ and Σ'(t) with safe guards.
 """
+
 from __future__ import annotations
-from typing import Sequence
+
 import numpy as np
+
 
 def compute_phi(network_matrix: np.ndarray) -> float:
     """
@@ -23,6 +25,7 @@ def compute_phi(network_matrix: np.ndarray) -> float:
     denom = float(np.sum(np.abs(A)))
     return 0.0 if denom == 0.0 else num / denom
 
+
 def compute_psi(query_count: int) -> float:
     """
     Ψ = min(query_count / 100, 1). Negative counts are clamped at 0.
@@ -30,11 +33,13 @@ def compute_psi(query_count: int) -> float:
     qc = max(0, int(query_count))
     return min(qc / 100.0, 1.0)
 
+
 def compute_epsilon(emotion_intensity: float) -> float:
     """
     Ε = min(|emotion_intensity|, 1)
     """
     return min(abs(float(emotion_intensity)), 1.0)
+
 
 def compute_tau(activity_t: dict, activity_t_minus_1: dict) -> float:
     """
@@ -57,8 +62,10 @@ def compute_tau(activity_t: dict, activity_t_minus_1: dict) -> float:
         return 0.0
     return corr
 
-def compute_sigma_prime(phi: float, psi: float, epsilon: float, tau: float,
-                        eta: float, alpha: float, recurrence: float) -> float:
+
+def compute_sigma_prime(
+    phi: float, psi: float, epsilon: float, tau: float, eta: float, alpha: float, recurrence: float
+) -> float:
     """
     Σ'(t) = (phi^0.8 * psi^0.7 * epsilon^0.5 * tau^0.4) * H(eta, alpha, recurrence)
     H = 3*eta*alpha*recurrence / (eta + alpha + recurrence + 1e-8)

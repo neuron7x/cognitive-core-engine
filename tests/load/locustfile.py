@@ -1,4 +1,5 @@
-from locust import HttpUser, task, between
+from locust import HttpUser, between, task
+
 
 class ApiUser(HttpUser):
     wait_time = between(0.1, 0.5)
@@ -9,4 +10,4 @@ class ApiUser(HttpUser):
 
     @task(1)
     def dot(self):
-        self.client.post("/api/dot", json={"a":[1,2,3], "b":[4,5,6]})
+        self.client.post("/api/dot", json={"a": [1, 2, 3], "b": [4, 5, 6]})

@@ -1,4 +1,8 @@
-import shutil, subprocess, pytest
+import shutil
+import subprocess
+
+import pytest
+
 
 def test_mkdocs_build():
     if shutil.which("mkdocs") is None:

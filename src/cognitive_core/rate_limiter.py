@@ -1,6 +1,8 @@
-
 from __future__ import annotations
-import os, time
+
+import os
+import time
+
 try:
     import redis
 except Exception:
@@ -27,11 +29,20 @@ redis.call('EXPIRE', key, 3600)
 return {allowed, tostring(tokens)}
 """
 
+
 class RedisBucketLimiter:
-    def __init__(self, redis_url: str | None = None, bucket_key: str = "cce_bucket", capacity: int = 60, refill_per_sec: float = 1.0):
+    def __init__(
+        self,
+        redis_url: str | None = None,
+        bucket_key: str = "cce_bucket",
+        capacity: int = 60,
+        refill_per_sec: float = 1.0,
+    ):
         self.redis_url = redis_url or os.environ.get("REDIS_URL")
         if not redis:
-            raise RuntimeError("redis package not installed. Install 'redis' to use RedisBucketLimiter.")
+            raise RuntimeError(
+                "redis package not installed. Install 'redis' to use RedisBucketLimiter."
+            )
         self.r = redis.from_url(self.redis_url, decode_responses=True)
         self.bucket_key = bucket_key
         self.capacity = float(capacity)
@@ -47,7 +58,9 @@ class RedisBucketLimiter:
         now = time.time()
         try:
             if self.sha:
-                res = self.r.evalsha(self.sha, 1, key, self.capacity, self.refill_per_sec, now, needed)
+                res = self.r.evalsha(
+                    self.sha, 1, key, self.capacity, self.refill_per_sec, now, needed
+                )
             else:
                 res = self.r.eval(self.lua, 1, key, self.capacity, self.refill_per_sec, now, needed)
             allowed = int(res[0]) == 1
@@ -55,11 +68,14 @@ class RedisBucketLimiter:
         except Exception:
             return False
 
+
 class RedisCostTracker:
-    def __init__(self, redis_url: str | None = None, prefix: str = 'cce_cost'):
-        self.redis_url = redis_url or os.environ.get('REDIS_URL')
+    def __init__(self, redis_url: str | None = None, prefix: str = "cce_cost"):
+        self.redis_url = redis_url or os.environ.get("REDIS_URL")
         if not redis:
-            raise RuntimeError("redis package not installed. Install 'redis' to use RedisCostTracker.")
+            raise RuntimeError(
+                "redis package not installed. Install 'redis' to use RedisCostTracker."
+            )
         self.r = redis.from_url(self.redis_url, decode_responses=True)
         self.prefix = prefix
 

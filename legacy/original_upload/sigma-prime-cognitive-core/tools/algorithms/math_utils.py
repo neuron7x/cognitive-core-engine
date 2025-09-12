@@ -3,9 +3,13 @@ Mathematical utilities: log-sum-exp, stable softmax, Welford variance.
 
 All functions include rigorous numerics and complexity notes.
 """
+
 from __future__ import annotations
-from typing import Iterable, Tuple
+
+from collections.abc import Iterable
+
 import numpy as np
+
 
 def logsumexp(x: np.ndarray) -> float:
     r"""
@@ -37,6 +41,7 @@ def logsumexp(x: np.ndarray) -> float:
     s = float(np.sum(y))
     return m + np.log(s)
 
+
 def stable_softmax(x: np.ndarray) -> np.ndarray:
     r"""
     Compute the softmax with log-sum-exp stabilization:
@@ -62,7 +67,8 @@ def stable_softmax(x: np.ndarray) -> np.ndarray:
     denom = float(np.sum(y))
     return y / denom
 
-def welford_variance(stream: Iterable[float]) -> Tuple[float, float]:
+
+def welford_variance(stream: Iterable[float]) -> tuple[float, float]:
     r"""
     Online mean/variance via Welford (1962):
     For samples $x_k$,
