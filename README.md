@@ -1,4 +1,3 @@
-````markdown
 # <img src="assets/logo.svg" alt="Логотип" width="48" align="left"/> cognitive-core-engine
 
 > Базовий рушій для когнітивних сервісів із API, CLI та підтримкою плагінів.
@@ -35,7 +34,7 @@
 ## Встановлення
 ```bash
 pip install -e '.[api,test,dev]'
-````
+```
 
 ## Швидкий старт
 
