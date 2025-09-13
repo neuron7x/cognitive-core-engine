@@ -44,6 +44,14 @@ cogctl --help
 pytest
 ```
 
+### Генерація ресурсів
+
+```bash
+python tools/gen_assets.py
+```
+
+Скрипт створює допоміжні графічні файли у каталозі `assets`, зокрема `logo.svg` та `og-banner.png`.
+
 ## API
 Докладніше див. [docs/API.md](docs/API.md).
 
