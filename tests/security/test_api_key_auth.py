@@ -1,16 +1,16 @@
 import pytest
 
 from cognitive_core.api import auth
+from cognitive_core.config import Settings
 
 
 @pytest.mark.integration
-def test_api_key_enforced(api_client):
-    original = auth.settings.api_key
-    auth.settings.api_key = "secret"
-    try:
-        r = api_client.get("/api/health")
-        assert r.status_code == 403
-        r2 = api_client.get("/api/health", headers={"X-API-Key": "secret"})
-        assert r2.status_code == 200
-    finally:
-        auth.settings.api_key = original
+def test_api_key_enforced(api_client, monkeypatch):
+    monkeypatch.setenv("COG_API_KEY", "secret")
+    monkeypatch.setattr(auth, "settings", Settings())
+
+    r = api_client.get("/api/health")
+    assert r.status_code == 403
+
+    r2 = api_client.get("/api/health", headers={"X-API-Key": "secret"})
+    assert r2.status_code == 200
