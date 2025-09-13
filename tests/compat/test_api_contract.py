@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from cognitive_core.api.main import app
+from cognitive_core.api import app
 
 client = TestClient(app)
 
