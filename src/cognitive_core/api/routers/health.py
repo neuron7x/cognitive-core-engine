@@ -1,8 +1,40 @@
+"""Basic health and service information endpoints."""
+
+from importlib.metadata import PackageNotFoundError, version
+
 from fastapi import APIRouter
 
+from ...config.settings import Settings
+
 router = APIRouter()
+settings = Settings()
 
 
 @router.get("/health")
-def health():
+@router.get("/healthz")
+def health() -> dict[str, str]:
+    """Return a basic health status."""
     return {"status": "ok"}
+
+
+@router.get("/livez")
+def live() -> dict[str, str]:
+    """Simple liveness probe."""
+    return {"status": "ok"}
+
+
+@router.get("/readyz")
+def ready() -> dict[str, str]:
+    """Readiness probe with a trivial dependency check."""
+    dependencies_ok = bool(settings.app_name)
+    return {"status": "ok" if dependencies_ok else "fail"}
+
+
+@router.get("/v1/info")
+def info() -> dict[str, str]:
+    """Return application metadata."""
+    try:
+        app_version = version("cognitive-core-engine")
+    except PackageNotFoundError:  # pragma: no cover - fallback when package isn't installed
+        app_version = "unknown"
+    return {"name": settings.app_name, "version": app_version}
