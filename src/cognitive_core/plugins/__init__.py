@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from importlib.metadata import entry_points
 from typing import Protocol
 
 
@@ -37,3 +38,17 @@ def dispatch(name: str, payload: dict) -> dict:
         raise KeyError(f"Plugin '{name}' not found")
     _meta, plugin = entry
     return plugin.run(payload)
+
+
+def discover(group: str = "cognitive_core.plugins") -> None:
+    """Discover and load plugins defined via entry points.
+
+    Each entry point should resolve to a callable that returns a tuple of
+    ``(plugin, PluginMetadata)``. Discovered plugins are automatically
+    registered in :data:`REGISTRY`.
+    """
+
+    for ep in entry_points().select(group=group):
+        factory = ep.load()
+        plugin, metadata = factory()
+        register(plugin, metadata)
