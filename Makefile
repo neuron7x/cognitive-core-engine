@@ -1,5 +1,5 @@
 
-.PHONY: setup lint test coverage security fmt api docs build docker dev
+.PHONY: setup lint test coverage security fmt api docs build docker dev bench
 
 setup:
 	@if [ -f requirements.txt ] || [ -f pyproject.toml ]; then \
@@ -31,6 +31,9 @@ test:
 	@if [ -f go.mod ]; then go test ./...; fi
 	@if [ -f Cargo.toml ]; then cargo test; fi
 	@if [ -f pom.xml ]; then mvn -B test; fi
+
+bench:
+	@if [ -f requirements.txt ] || [ -f pyproject.toml ]; then pytest tests/benchmarks --benchmark-save=bench --benchmark-json=benchmarks.json; fi
 
 coverage:
 	@if [ -f requirements.txt ] || [ -f pyproject.toml ]; then pytest --cov=. --cov-report=xml; fi
