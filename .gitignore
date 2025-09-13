@@ -1,2 +1,2 @@
-# Ignore build-generated egg-info
-src/cognitive_core_engine.egg-info/
+# Ignore build-generated egg-info directories
+*.egg-info/
