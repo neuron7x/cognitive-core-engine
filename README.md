@@ -15,7 +15,7 @@
 - [API](#api)
 - [CLI](#cli)
 - [Тестування](#тестування)
-- [Архітектура](#архітектура)
+- [Architecture Overview / Огляд архітектури](#architecture-overview--огляд-архітектури)
 - [Дорожня карта](#дорожня-карта)
 - [Документація](#документація)
 - [Спільнота](#спільнота)
@@ -86,24 +86,17 @@ cogctl solve2x2 1 2 3 4 5 6
 pytest
 ```
 
-## Архітектура
+## Architecture Overview / Огляд архітектури
 
-```mermaid
-graph TD
-subgraph Domain
-D[Entities]
-end
-subgraph Application
-A[Use Cases]
-end
-subgraph Interfaces
-I[FastAPI]
-C[CLI]
-end
-D --> A --> I
-A --> C
-A --> P[Plugins]
-```
+**EN:** High-level view of the engine. See [docs/architecture.md](docs/architecture.md) for detailed data flow diagrams of the API, pipelines, and plugin system.
+
+**UA:** Високорівневий огляд рушія. Докладні діаграми потоків даних API, пайплайнів та плагінів дивіться у [docs/architecture.md](docs/architecture.md).
+
+- Domain core / Доменне ядро
+- Application services / Сервіси застосунку
+- FastAPI layer / Шар FastAPI
+- Pipeline orchestrator / Оркестратор пайплайнів
+- Plugin registry / Реєстр плагінів
 
 ## Дорожня карта
 
