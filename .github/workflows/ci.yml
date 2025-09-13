@@ -25,6 +25,13 @@ jobs:
       has_docker: ${{ steps.detect.outputs.has_docker }}
     steps:
       - uses: actions/checkout@v4
+      - name: Ensure no egg-info directories are committed
+        run: |
+          if git ls-files | grep -q '\\.egg-info/'; then
+            echo "Error: tracked egg-info directories found:" >&2
+            git ls-files | grep '\\.egg-info/' >&2
+            exit 1
+          fi
       - id: detect
         run: |
           echo "has_python=false" >> $GITHUB_OUTPUT
