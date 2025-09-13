@@ -1,0 +1,4 @@
+-e .[dev]
+fastapi>=0.111
+httpx>=0.25
+pytest>=7.4
