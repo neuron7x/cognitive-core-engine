@@ -84,6 +84,9 @@ cogctl solve2x2 1 2 3 4 5 6
 
 ```bash
 pytest
+
+# запуск лише CLI та API тестів
+pytest tests/cli/test_cli.py tests/api/test_root.py
 ```
 
 ## Architecture Overview / Огляд архітектури
