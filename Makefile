@@ -10,7 +10,7 @@ test:
 	pytest
 
 api:
-	uvicorn cognitive_core.api.main:app --host 0.0.0.0 --port 8000 --reload
+        uvicorn cognitive_core.api:app --host 0.0.0.0 --port 8000 --reload
 
 docs:
 	mkdocs build --strict || true
