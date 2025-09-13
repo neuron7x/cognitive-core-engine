@@ -6,10 +6,9 @@ from fastapi import APIRouter
 
 from ...utils.telemetry import instrument_route
 
-from ...config.settings import Settings
+from ...config import settings
 
 router = APIRouter()
-settings = Settings()
 
 
 @router.get("/health")
