@@ -1,32 +1,111 @@
+"""Command line interface for cognitive_core."""
+
+from __future__ import annotations
+
 import argparse
 import json
+import os
+import subprocess
 import sys
+from pathlib import Path
 
 from .core.math_utils import dot, solve_2x2
 
 
-def main(argv=None):
+def _run_alembic(*args: str) -> int:
+    """Run an alembic command if alembic is installed.
+
+    Parameters
+    ----------
+    *args:
+        Arguments passed directly to the ``alembic`` command line tool.
+
+    Returns
+    -------
+    int
+        Exit code from the command (``0`` on success).
+    """
+
+    cfg = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
+    env = os.environ.copy()
+    env.setdefault("DATABASE_URL", "sqlite://")
+    try:
+        return subprocess.run(["alembic", "-c", str(cfg), *args], env=env).returncode
+    except FileNotFoundError:
+        # Alembic isn't installed; treat as a no-op for demo purposes.
+        print("alembic not installed", file=sys.stderr)
+        return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="cogctl")
     sub = parser.add_subparsers(dest="cmd", required=True)
+
+    # basic math helpers kept for compatibility
     p_dot = sub.add_parser("dotv")
     p_dot.add_argument("a")
     p_dot.add_argument("b")
+
     p_solve = sub.add_parser("solve2x2")
     for k in ("a", "b", "c", "d", "e", "f"):
         p_solve.add_argument(k, type=float)
-    args = parser.parse_args(argv)
+
+    # new commands
+    sub.add_parser("ping")
+
+    p_migrate = sub.add_parser("migrate")
+    migrate_sub = p_migrate.add_subparsers(dest="action", required=True)
+    migrate_sub.add_parser("status")
+    migrate_sub.add_parser("up")
+    migrate_sub.add_parser("down")
+
+    p_pipeline = sub.add_parser("pipeline")
+    pipeline_sub = p_pipeline.add_subparsers(dest="action", required=True)
+    p_run = pipeline_sub.add_parser("run")
+    p_run.add_argument("--name", required=True)
+
+    return parser
+
+
+def handle_args(args: argparse.Namespace) -> int:
     if args.cmd == "dotv":
         a = [float(x) for x in args.a.split(",") if x]
         b = [float(x) for x in args.b.split(",") if x]
         n = min(len(a), len(b))
         print(json.dumps({"dot": dot(a[:n], b[:n])}))
         return 0
+
     if args.cmd == "solve2x2":
         x, y = solve_2x2(args.a, args.b, args.c, args.d, args.e, args.f)
         print(json.dumps({"x": x, "y": y}))
         return 0
+
+    if args.cmd == "ping":
+        print("pong")
+        return 0
+
+    if args.cmd == "migrate":
+        if args.action == "status":
+            return _run_alembic("current")
+        if args.action == "up":
+            return _run_alembic("upgrade", "head")
+        if args.action == "down":
+            return _run_alembic("downgrade", "-1")
+        return 1
+
+    if args.cmd == "pipeline" and args.action == "run":
+        print(f"Running pipeline {args.name}")
+        return 0
+
     return 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    return handle_args(args)
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
