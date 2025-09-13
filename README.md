@@ -1,4 +1,3 @@
-````markdown
 # <img src="assets/logo.svg" alt="Логотип" width="48" align="left"/> cognitive-core-engine
 
 > Базовий рушій для когнітивних сервісів із API, CLI та підтримкою плагінів.
@@ -7,6 +6,8 @@
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/neuron7x/cognitive-core-engine/codeql.yml?style=flat-square&logo=github)](https://github.com/neuron7x/cognitive-core-engine/actions/workflows/codeql.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+
+
 
 ## Зміст
 - [Огляд](#огляд)
@@ -35,17 +36,19 @@
 ## Встановлення
 ```bash
 pip install -e '.[api,test,dev]'
-````
+```
 
 ## Швидкий старт
 
 ```bash
+python tools/gen_assets.py  # формує банер та демо-GIF
 cogctl --help
 pytest
 ```
 
 ## API
-Докладніше див. [docs/API.md](docs/API.md).
+Демо-GIF можна згенерувати через `tools/gen_assets.py`.
+Докладніше див. [docs/api.md](docs/api.md).
 
 ```bash
 # Перевірка стану сервісу
@@ -58,8 +61,8 @@ curl -X POST http://localhost:8000/api/dot \
 ```
 
 ## CLI
-
-Ознайомтеся з [docs/OPERATIONS.md](docs/OPERATIONS.md) для деталей.
+Демо-GIF для CLI також генерується скриптом.
+Ознайомтеся з [docs/operations.md](docs/operations.md) для деталей.
 
 ```bash
 # Скалярний добуток векторами

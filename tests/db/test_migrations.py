@@ -1,5 +1,9 @@
 import os
+import pytest
 
+pytest.importorskip(
+    "alembic", reason="alembic not installed; skipping migration tests"
+)
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect

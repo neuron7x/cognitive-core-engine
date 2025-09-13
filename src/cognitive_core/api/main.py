@@ -14,4 +14,5 @@ app.include_router(pipelines.router, prefix=settings.api_prefix, tags=["pipeline
 
 @app.get("/")
 def root():
+    """Return basic application information."""
     return {"name": settings.app_name}

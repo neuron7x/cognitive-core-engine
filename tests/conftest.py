@@ -1,12 +1,12 @@
 import pytest
 
-try:
-    from fastapi.testclient import TestClient  # type: ignore
-except Exception:
-    pytest.skip("fastapi[test] not installed; skipping API tests", allow_module_level=True)
-from cognitive_core.api.main import app
-
 
 @pytest.fixture(scope="session")
 def api_client():
+    pytest.importorskip(
+        "fastapi", reason="fastapi[test] not installed; skipping API tests"
+    )
+    from fastapi.testclient import TestClient  # type: ignore
+    from cognitive_core.api.main import app
+
     return TestClient(app)

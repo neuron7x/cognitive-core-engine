@@ -1,3 +1,6 @@
+import pytest
+
+pytest.importorskip("hypothesis", reason="hypothesis not installed; skipping property tests")
 from hypothesis import given, strategies as st
 
 from cognitive_core.core.math_utils import dot

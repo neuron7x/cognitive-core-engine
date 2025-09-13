@@ -1,5 +1,9 @@
-from fastapi.testclient import TestClient
+import pytest
 
+pytest.importorskip(
+    "fastapi", reason="fastapi[test] not installed; skipping API tests"
+)
+from fastapi.testclient import TestClient  # type: ignore
 from cognitive_core.api.main import app
 
 client = TestClient(app)
