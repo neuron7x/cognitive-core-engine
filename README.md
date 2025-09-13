@@ -13,6 +13,8 @@
 - [Встановлення](#встановлення)
 - [Швидкий старт](#швидкий-старт)
 - [API](#api)
+- [Security & Configuration](#security--configuration)
+  - [Troubleshooting](#troubleshooting)
 - [CLI](#cli)
 - [Тестування](#тестування)
 - [Architecture Overview / Огляд архітектури](#architecture-overview--огляд-архітектури)
@@ -70,6 +72,32 @@ curl -s -X POST http://localhost:8000/api/dot \
   -d '{"a": [1, 2, 3], "b": [4, 5, 6]}'
 # -> {"result": 32.0}
 ```
+
+## Security & Configuration
+
+Скопіюйте приклад конфігурації та налаштуйте ключі:
+
+```bash
+cp .env.example .env
+```
+
+Встановіть `COG_API_KEYS` (кома-розділений список) та інші змінні середовища.
+
+Приклад запиту з заголовком `X-API-Key`:
+
+```bash
+curl -H "X-API-Key: your_api_key" http://localhost:8000/api/health
+```
+
+Налаштування обмеження швидкості керуються змінними `REDIS_URL`,
+`RATE_LIMIT_CAPACITY` та `RATE_LIMIT_REFILL_PER_SEC`.
+
+### Troubleshooting
+
+- **Відсутні залежності.** Деякі функції потребують додаткових пакетів
+  (`redis`, `requests` тощо). Встановіть їх через `pip install -e '.[api,test,dev]'`.
+- **Файл `.env` не знайдено.** Переконайтеся, що скопіювали `.env.example`
+  у `.env` або експортували змінні вручну.
 
 ## CLI
 
