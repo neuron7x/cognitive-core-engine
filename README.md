@@ -81,7 +81,9 @@ A --> P[Plugins]
 
 ## Документація
 
-Докладніше у [docs/](docs/).
+- [API](docs/api.md)
+- [Архітектура](docs/architecture.md)
+- [Операції](docs/operations.md)
 
 ## Спільнота
 
