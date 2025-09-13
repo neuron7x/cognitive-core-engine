@@ -45,8 +45,29 @@ pytest
 ```
 
 ## API
+Докладніше див. [docs/API.md](docs/API.md).
+
+```bash
+# Перевірка стану сервісу
+curl http://localhost:8000/api/health
+
+# Обчислення скалярного добутку
+curl -X POST http://localhost:8000/api/dot \
+  -H "Content-Type: application/json" \
+  -d '{"a": [1, 2, 3], "b": [4, 5, 6]}'
+```
 
 ## CLI
+
+Ознайомтеся з [docs/OPERATIONS.md](docs/OPERATIONS.md) для деталей.
+
+```bash
+# Скалярний добуток векторами
+cogctl dotv 1,2,3 4,5,6
+
+# Розв'язання системи 2x2
+cogctl solve2x2 1 2 3 4 5 6
+```
 
 ## Тестування
 
