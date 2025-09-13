@@ -49,12 +49,14 @@ pytest
 
 ```bash
 # Перевірка стану сервісу
-curl http://localhost:8000/api/health
+curl -s http://localhost:8000/api/health
+# -> {"status": "ok"}
 
 # Обчислення скалярного добутку
-curl -X POST http://localhost:8000/api/dot \
+curl -s -X POST http://localhost:8000/api/dot \
   -H "Content-Type: application/json" \
   -d '{"a": [1, 2, 3], "b": [4, 5, 6]}'
+# -> {"result": 32.0}
 ```
 
 ## CLI
@@ -62,11 +64,13 @@ curl -X POST http://localhost:8000/api/dot \
 Ознайомтеся з [docs/OPERATIONS.md](docs/OPERATIONS.md) для деталей.
 
 ```bash
-# Скалярний добуток векторами
+# Скалярний добуток векторів
 cogctl dotv 1,2,3 4,5,6
+# -> {"dot": 32.0}
 
 # Розв'язання системи 2x2
 cogctl solve2x2 1 2 3 4 5 6
+# -> {"x": -4.0, "y": 4.5}
 ```
 
 ## Тестування
