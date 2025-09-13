@@ -8,15 +8,15 @@ from cognitive_core.config import Settings
 client = TestClient(app)
 
 
-def test_no_auth_when_api_key_none(monkeypatch):
-    monkeypatch.delenv("COG_API_KEY", raising=False)
+def test_no_auth_when_api_keys_none(monkeypatch):
+    monkeypatch.delenv("COG_API_KEYS", raising=False)
     monkeypatch.setattr(auth, "settings", Settings())
     r = client.get("/api/health")
     assert r.status_code == 200
 
 
-def test_requires_auth_when_api_key_empty(monkeypatch):
-    monkeypatch.setenv("COG_API_KEY", "")
+def test_requires_auth_when_api_keys_empty(monkeypatch):
+    monkeypatch.setenv("COG_API_KEYS", "")
     monkeypatch.setattr(auth, "settings", Settings())
     r = client.get("/api/health")
     assert r.status_code == 403
