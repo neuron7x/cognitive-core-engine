@@ -1,1 +1,5 @@
-site_name: cognitive-core-engine\n
+site_name: cognitive-core-engine
+nav:
+  - API: api.md
+  - Architecture: architecture.md
+  - Operations: operations.md
