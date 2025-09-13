@@ -12,8 +12,8 @@
 - [Особливості](#особливості)
 - [Встановлення](#встановлення)
 - [Швидкий старт](#швидкий-старт)
-  - [API](#api)
-  - [CLI](#cli)
+- [API](#api)
+- [CLI](#cli)
 - [Тестування](#тестування)
 - [Архітектура](#архітектура)
 - [Дорожня карта](#дорожня-карта)
@@ -37,17 +37,16 @@ pip install -e '.[api,test,dev]'
 
 ## Швидкий старт
 
-### API
-Запустіть HTTP API для локальної розробки:
-```bash
-uvicorn cognitive_core.api:app --reload
-```
-
-### CLI
-Скористайтеся інтерфейсом командного рядка:
 ```bash
 cogctl --help
+pytest
 ```
+
+## API
+<!-- TODO: додати приклади використання API -->
+
+## CLI
+<!-- TODO: додати приклади використання CLI -->
 
 ## Тестування
 ```bash
@@ -55,38 +54,44 @@ pytest
 ```
 
 ## Архітектура
+
 ```mermaid
 graph TD
-    subgraph Domain
-        D[Entities]
-    end
-    subgraph Application
-        A[Use Cases]
-    end
-    subgraph Interfaces
-        I[FastAPI]
-        C[CLI]
-    end
-    D --> A --> I
-    A --> C
-    A --> P[Plugins]
+subgraph Domain
+D[Entities]
+end
+subgraph Application
+A[Use Cases]
+end
+subgraph Interfaces
+I[FastAPI]
+C[CLI]
+end
+D --> A --> I
+A --> C
+A --> P[Plugins]
 ```
 
 ## Дорожня карта
-- [ ] Опублікувати першу версію на PyPI
-- [ ] Розширити каталог плагінів
-- [ ] Додати приклади використання
+
+* [ ] Опублікувати першу версію на PyPI
+* [ ] Розширити каталог плагінів
+* [ ] Додати приклади використання
 
 ## Документація
+
 Докладніше у [docs/](docs/).
 
 ## Спільнота
-- [Посібник для контриб'юторів](CONTRIBUTING.md)
-- [Кодекс поведінки](CODE_OF_CONDUCT.md)
-- [Політика безпеки](SECURITY.md)
+
+* [Посібник для контриб'юторів](CONTRIBUTING.md)
+* [Кодекс поведінки](CODE_OF_CONDUCT.md)
+* [Політика безпеки](SECURITY.md)
 
 ## Ліцензія
+
 Цей проєкт розповсюджується за ліцензією [MIT](LICENSE).
 
 ---
-*Готово до вкладу: приймаємо PR та пропозиції!* 
+
+*Готово до вкладу: приймаємо PR та пропозиції!*
