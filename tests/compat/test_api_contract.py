@@ -20,9 +20,7 @@ def test_contract_dot_shape():
 
 
 def test_contract_solve2x2_shape():
-    r = client.post(
-        "/api/solve2x2", json={"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}
-    )
+    r = client.post("/api/solve2x2", json={"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6})
     assert r.status_code == 200
     j = r.json()
     assert "x" in j and "y" in j
