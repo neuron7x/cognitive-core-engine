@@ -44,7 +44,7 @@ pytest
 ```
 
 ## API
-Докладніше див. [docs/API.md](docs/API.md).
+Докладніше див. [docs/api.md](docs/api.md).
 
 ```bash
 # Перевірка стану сервісу
@@ -60,7 +60,7 @@ curl -s -X POST http://localhost:8000/api/dot \
 
 ## CLI
 
-Ознайомтеся з [docs/OPERATIONS.md](docs/OPERATIONS.md) для деталей.
+Ознайомтеся з [docs/operations.md](docs/operations.md) для деталей.
 
 ```bash
 # Скалярний добуток векторів
