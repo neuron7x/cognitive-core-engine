@@ -2,14 +2,17 @@
 
 Use Conventional Commits. Run `make lint test` before PR.
 
-## Pre-commit
+## Development setup
 
-Install and configure the pre-commit hooks:
+Install FastAPI with its test dependencies and set up pre-commit hooks:
 
 ```bash
+pip install 'fastapi[test]'
 pip install pre-commit
 pre-commit install
 ```
+
+## Pre-commit
 
 Before committing, run the hooks against your changes:
 
