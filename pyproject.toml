@@ -8,12 +8,15 @@ version = "0.1.0"
 description = "Core engine with API, CLI, plugins, tests and CI"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["pydantic>=2.7", "typing-extensions>=4.8"]
+dependencies = [
+    "pydantic>=2.7",
+    "typing-extensions>=4.8",
+    "fastapi>=0.111",
+    "uvicorn>=0.29",
+]
 
 [project.optional-dependencies]
 api = [
-    "fastapi>=0.111",
-    "uvicorn>=0.29",
     "httpx>=0.25",
     "prometheus-client>=0.20",
     "opentelemetry-sdk>=1.24",
