@@ -1,0 +1,12 @@
+- name: type/ci
+  color: 0e8a16
+  description: CI related changes
+- name: type/security
+  color: d93f0b
+  description: Security related changes
+- name: env/preview
+  color: 5319e7
+  description: Preview environment
+- name: env/release
+  color: 0366d6
+  description: Release environment
