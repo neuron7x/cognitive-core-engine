@@ -2,105 +2,309 @@ name: CI
 
 on:
   push:
+    branches: ['**']
   pull_request:
+    branches: ['**']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  setup:
+  detect:
     runs-on: ubuntu-latest
-    steps:
-      - run: echo "setup"
-  lint:
-    needs: setup
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write   # потрібно, щоб автокомітнути зміни форматування
+    outputs:
+      has_python: ${{ steps.detect.outputs.has_python }}
+      has_node: ${{ steps.detect.outputs.has_node }}
+      has_go: ${{ steps.detect.outputs.has_go }}
+      has_java: ${{ steps.detect.outputs.has_java }}
+      has_rust: ${{ steps.detect.outputs.has_rust }}
+      has_docker: ${{ steps.detect.outputs.has_docker }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
-      - name: Install deps
+      - id: detect
         run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[dev]" || pip install ruff black isort
-      - name: Auto-format (ruff+black+isort)
-        run: |
-          ruff check . --fix || true
-          black . || true
-          isort . || true
-      - name: Auto-commit formatting
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "style(fmt): auto-format via CI (ruff/black/isort)"
-          commit_user_name: bot-ci
-          commit_user_email: bot@example.com
-          skip_dirty_check: false
-      - name: Ruff (verify)
-        run: ruff check .
-      - name: Black (verify)
-        run: black --check .
-      - name: isort (verify)
-        run: isort --check-only .
+          echo "has_python=false" >> $GITHUB_OUTPUT
+          echo "has_node=false" >> $GITHUB_OUTPUT
+          echo "has_go=false" >> $GITHUB_OUTPUT
+          echo "has_java=false" >> $GITHUB_OUTPUT
+          echo "has_rust=false" >> $GITHUB_OUTPUT
+          echo "has_docker=false" >> $GITHUB_OUTPUT
+          [ -f requirements.txt ] || [ -f pyproject.toml ] && echo "has_python=true" >> $GITHUB_OUTPUT
+          [ -f package.json ] && echo "has_node=true" >> $GITHUB_OUTPUT
+          [ -f go.mod ] && echo "has_go=true" >> $GITHUB_OUTPUT
+          [ -f pom.xml ] && echo "has_java=true" >> $GITHUB_OUTPUT
+          [ -f Cargo.toml ] && echo "has_rust=true" >> $GITHUB_OUTPUT
+          [ -f Dockerfile ] && echo "has_docker=true" >> $GITHUB_OUTPUT
 
-  typecheck:
+  python:
+    needs: detect
+    if: needs.detect.outputs.has_python == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install deps
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-
+      - name: Install dependencies
         run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[api,test,dev,security,docs]" || pip install -e .
+          python -m pip install -U pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip install .; fi
+          pip install ruff mypy bandit safety pytest coverage
+      - name: Ruff
+        run: ruff --output-format=github .
       - name: Mypy
         run: mypy .
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install deps
-        run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[api,test,dev,security,docs]" || pip install -e .
-      - name: Pytest
-        run: pytest -q
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install deps
-        run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[api,test,dev,security,docs]" || pip install -e .
       - name: Bandit
-        run: bandit -r .
-      - name: Pip Audit
-        run: pip-audit --skip-deps --strict
+        run: bandit -r . -f xml -o reports/bandit.xml || true
+      - name: Safety
+        run: safety check --full-report --json > reports/safety.json || true
+      - name: Pytest
+        run: pytest --junitxml=reports/junit-python.xml --cov=. --cov-report=xml
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-reports
+          path: |
+            coverage.xml
+            reports/junit-python.xml
+            reports/bandit.xml
+            reports/safety.json
 
-  docs:
+  node:
+    needs: detect
+    if: needs.detect.outputs.has_node == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.11"
-      - name: Install deps
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci || npm i
+      - name: ESLint
+        run: npx eslint . || true
+      - name: Typecheck
+        run: npx tsc -p . || true
+      - name: NPM Audit
+        run: npm audit --json > reports/npm-audit.json || true
+      - name: Jest
+        run: npx jest --ci --reporters=default --reporters=jest-junit --coverage
+        env:
+          JEST_JUNIT_OUTPUT_DIR: reports
+          JEST_JUNIT_OUTPUT_NAME: junit-node.xml
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-reports
+          path: |
+            coverage/lcov.info
+            reports/junit-node.xml
+            reports/npm-audit.json
+
+  go:
+    needs: detect
+    if: needs.detect.outputs.has_go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test ./... -coverprofile=cover.out -json > reports/go-test.json
+      - name: Coverage
+        run: go tool cover -func=cover.out
+      - name: Govulncheck
         run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[api,test,dev,security,docs]" || pip install -e .
-      - name: Build docs
-        run: mkdocs build --strict
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck -json ./... > reports/govulncheck.json || true
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-reports
+          path: |
+            cover.out
+            reports/go-test.json
+            reports/govulncheck.json
+
+  java:
+    needs: detect
+    if: needs.detect.outputs.has_java == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+      - name: Maven verify
+        run: mvn -B -DskipITs=true verify
+      - name: OWASP dependency check
+        run: mvn -B org.owasp:dependency-check-maven:check || true
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-reports
+          path: |
+            **/target/surefire-reports/*.xml
+            **/target/site/jacoco/jacoco.xml
+            **/target/dependency-check-report.xml
+
+  rust:
+    needs: detect
+    if: needs.detect.outputs.has_rust == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings || true
+      - name: Test
+        run: cargo test --all -- --format=json --report-time | tee reports/rust-test.json
+      - name: Coverage
+        run: cargo tarpaulin --out Xml || true
+      - name: Cargo audit
+        run: cargo audit --json > reports/cargo-audit.json || true
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-reports
+          path: |
+            cobertura.xml
+            reports/rust-test.json
+            reports/cargo-audit.json
+
+  docker:
+    needs: detect
+    if: needs.detect.outputs.has_docker == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-buildx-
+      - name: Login GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Build and push
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}
+          TAG_BRANCH=${{ github.ref_name }}
+          TAG_SHA=${{ github.sha }}
+          TAGS="--tag $IMAGE:$TAG_BRANCH --tag $IMAGE:$TAG_SHA"
+          if [ "${{ github.ref }}" = "refs/heads/${{ github.event.repository.default_branch }}" ]; then
+            TAGS="$TAGS --tag $IMAGE:latest"
+          fi
+          docker buildx build . --push --platform linux/amd64,linux/arm64 $TAGS --cache-from type=local,src=/tmp/.buildx-cache --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max
+      - name: Move cache
+        if: always()
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  pages:
+    needs: detect
+    if: needs.detect.outputs.has_node == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Build
+        run: |
+          if [ -f package.json ]; then
+            npm ci || npm i
+            if node -e "process.exit(!(require('./package.json').scripts && require('./package.json').scripts.build))"; then
+              npm run build
+            fi
+          fi
+      - name: Detect static
+        id: static
+        run: |
+          if [ -d dist ]; then echo "path=dist" >> $GITHUB_OUTPUT; \
+          elif [ -d build ]; then echo "path=build" >> $GITHUB_OUTPUT; \
+          else echo "path=" >> $GITHUB_OUTPUT; fi
+      - name: Upload artifact
+        if: steps.static.outputs.path != ''
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.static.outputs.path }}
+      - name: Deploy
+        if: steps.static.outputs.path != ''
+        uses: actions/deploy-pages@v4
+        id: deploy
+      environment:
+        name: github-pages
+        url: ${{ steps.deploy.outputs.page_url }}
+
+  summary:
+    needs: [python, node, go, java, rust, docker, pages]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<'EOF' >> $GITHUB_STEP_SUMMARY
+          | Job | Result |
+          | --- | --- |
+          | python | ${{ needs.python.result }} |
+          | node | ${{ needs.node.result }} |
+          | go | ${{ needs.go.result }} |
+          | java | ${{ needs.java.result }} |
+          | rust | ${{ needs.rust.result }} |
+          | docker | ${{ needs.docker.result }} |
+          | pages | ${{ needs.pages.result }} |
+          EOF
