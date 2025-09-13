@@ -1,0 +1,12 @@
+name: Feature Request
+description: Suggest an idea
+labels: ["type/ci"]
+body:
+  - type: textarea
+    id: feature
+    attributes:
+      label: Proposal
+      description: What do you want?
+      placeholder: Describe the feature
+    validations:
+      required: true
