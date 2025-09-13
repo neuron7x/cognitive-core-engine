@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import importlib
 import os
 import subprocess
 import sys
@@ -64,6 +65,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_run = pipeline_sub.add_parser("run")
     p_run.add_argument("--name", required=True)
 
+    p_plugin = sub.add_parser("plugin")
+    plugin_sub = p_plugin.add_subparsers(dest="action", required=True)
+    plugin_sub.add_parser("list")
+    p_install = plugin_sub.add_parser("install")
+    p_install.add_argument("module")
+    p_remove = plugin_sub.add_parser("remove")
+    p_remove.add_argument("name")
+
     return parser
 
 
@@ -96,6 +105,32 @@ def handle_args(args: argparse.Namespace) -> int:
     if args.cmd == "pipeline" and args.action == "run":
         print(f"Running pipeline {args.name}")
         return 0
+
+    if args.cmd == "plugin":
+        from .plugins import REGISTRY
+        from .plugins.plugin_loader import load_plugins
+
+        if args.action == "list":
+            load_plugins()
+            for meta, _ in REGISTRY.values():
+                print(f"{meta.name} {meta.version}")
+            return 0
+
+        if args.action == "install":
+            try:
+                importlib.import_module(f"cognitive_core.plugins.{args.module}")
+                print(f"Installed {args.module}")
+                return 0
+            except ModuleNotFoundError:
+                print(f"Plugin module {args.module} not found", file=sys.stderr)
+                return 1
+
+        if args.action == "remove":
+            if REGISTRY.pop(args.name, None):
+                print(f"Removed {args.name}")
+                return 0
+            print(f"Plugin {args.name} not installed", file=sys.stderr)
+            return 1
 
     return 1
 

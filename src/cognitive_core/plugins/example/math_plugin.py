@@ -1,5 +1,5 @@
 from ...app.services import dot
-from .. import register
+from .. import PluginMetadata, register
 
 
 class MathPlugin:
@@ -11,4 +11,5 @@ class MathPlugin:
         return {"result": dot(a, b)}
 
 
-register(MathPlugin())
+metadata = PluginMetadata(name="math.dot", version="1.0.0", requirements=[])
+register(MathPlugin(), metadata)

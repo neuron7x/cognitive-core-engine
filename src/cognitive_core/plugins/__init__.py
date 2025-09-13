@@ -1,23 +1,39 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Protocol
 
 
 class Plugin(Protocol):
-    name: str
+    """Interface that all plugins must implement."""
 
     def run(self, payload: dict) -> dict: ...
 
 
-REGISTRY: dict[str, Plugin] = {}
+@dataclass
+class PluginMetadata:
+    """Metadata describing a plugin."""
+
+    name: str
+    version: str
+    requirements: list[str]
 
 
-def register(plugin: Plugin) -> None:
-    REGISTRY[plugin.name] = plugin
+# Maps plugin name to a tuple of (metadata, plugin instance)
+REGISTRY: dict[str, tuple[PluginMetadata, Plugin]] = {}
+
+
+def register(plugin: Plugin, metadata: PluginMetadata) -> None:
+    """Register a plugin with associated metadata."""
+
+    REGISTRY[metadata.name] = (metadata, plugin)
 
 
 def dispatch(name: str, payload: dict) -> dict:
-    p = REGISTRY.get(name)
-    if not p:
+    """Dispatch a payload to a registered plugin."""
+
+    entry = REGISTRY.get(name)
+    if not entry:
         raise KeyError(f"Plugin '{name}' not found")
-    return p.run(payload)
+    _meta, plugin = entry
+    return plugin.run(payload)
