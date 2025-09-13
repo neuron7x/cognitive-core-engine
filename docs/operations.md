@@ -28,3 +28,17 @@ Steps:
    ```bash
    docker compose logs -f api
    ```
+
+## Observability
+```mermaid
+flowchart LR
+    App[API] -->|/metrics| Prometheus
+    App -->|OTLP| Collector[OTel Collector]
+```
+Steps:
+1. Start the API; metrics are exposed at `http://localhost:8000/metrics`.
+2. Run Prometheus to scrape the metrics:
+   ```bash
+   docker run -p 9090:9090 prom/prometheus
+   ```
+3. Configure an OpenTelemetry collector (or Jaeger) and set `OTEL_EXPORTER_OTLP_ENDPOINT` to forward traces.

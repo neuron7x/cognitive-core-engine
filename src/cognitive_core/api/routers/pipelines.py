@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from ...core.pipeline_executor import PipelineExecutor
 from ...domain.pipelines import Artifact, Pipeline
+from ...utils.telemetry import instrument_route, record_llm_tokens
 
 router = APIRouter()
 
@@ -26,6 +27,7 @@ class RunRequest(BaseModel):
 
 
 @router.get("/v1/pipelines/{pipeline_id}")
+@instrument_route("get_pipeline")
 def get_pipeline(pipeline_id: str):
     pipeline = PIPELINES.get(pipeline_id)
     if not pipeline:
@@ -34,11 +36,13 @@ def get_pipeline(pipeline_id: str):
 
 
 @router.post("/v1/pipelines/run")
+@instrument_route("run_pipeline")
 def run_pipeline(req: RunRequest):
     pipeline = PIPELINES.get(req.pipeline_id)
     if not pipeline:
         raise HTTPException(status_code=404, detail="Pipeline not found")
     run = executor.execute(pipeline)
+    record_llm_tokens("run_pipeline", len(run.artifacts))
     return {
         "run_id": run.id,
         "status": run.status,
