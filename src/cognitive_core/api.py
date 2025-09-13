@@ -3,10 +3,20 @@ from typing import Any, Dict, Iterable
 
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from .core.math_utils import dot, solve_2x2
 
 app = FastAPI(title="cognitive-core-engine")
+
+
+class Solve2x2Request(BaseModel):
+    a: float
+    b: float
+    c: float
+    d: float
+    e: float
+    f: float
 
 
 @app.get("/api/health")
@@ -23,10 +33,8 @@ def dot_api(payload: Dict[str, Iterable[float]]):
 
 
 @app.post("/api/solve2x2")
-def solve2x2_api(payload: Dict[str, float]):
-    x, y = solve_2x2(
-        payload["a"], payload["b"], payload["c"], payload["d"], payload["e"], payload["f"]
-    )
+def solve2x2_api(payload: Solve2x2Request):
+    x, y = solve_2x2(payload.a, payload.b, payload.c, payload.d, payload.e, payload.f)
     return {"x": x, "y": y}
 
 
