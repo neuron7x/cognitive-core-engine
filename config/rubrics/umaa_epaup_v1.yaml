@@ -1,0 +1,13 @@
+version: 1
+metrics:
+  - name: role_adherence
+    weight: 0.25
+  - name: reasoning_soundness
+    weight: 0.25
+  - name: ethical_compliance
+    weight: 0.20
+  - name: hallucination_risk
+    weight: 0.15
+  - name: stability
+    weight: 0.15
+aggregation: weighted_mean

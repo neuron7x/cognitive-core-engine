@@ -1,0 +1,11 @@
+deny_categories:
+  - illicit_behaviors
+  - self-harm
+  - csam
+  - violent_extremism
+pii_patterns:
+  - name: email
+    regex: "(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}"
+on_violation:
+  action: block
+  user_message: "Запит порушує політики безпеки. Сформулюйте інакше."

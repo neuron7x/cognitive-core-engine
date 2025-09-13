@@ -1,1 +1,13 @@
 -e .[dev]
+numpy
+scipy
+networkx
+fastapi
+pydantic
+httpx
+rich
+uvicorn
+pyyaml
+tqdm
+opentelemetry-api
+opentelemetry-sdk
