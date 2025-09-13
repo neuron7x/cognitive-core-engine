@@ -6,5 +6,7 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
     debug: bool = False
     api_key: str | None = None
+    rate_limit_rps: float = 5.0
+    rate_limit_burst: int = 10
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="COG_")
