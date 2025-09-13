@@ -2,10 +2,7 @@
 
 > Базовий рушій для когнітивних сервісів із API, CLI та підтримкою плагінів.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/neuron7x/cognitive-core-engine/ci.yml?style=flat-square&logo=github)](https://github.com/neuron7x/cognitive-core-engine/actions/workflows/ci.yml)
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/neuron7x/cognitive-core-engine/codeql.yml?style=flat-square&logo=github)](https://github.com/neuron7x/cognitive-core-engine/actions/workflows/codeql.yml)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](#)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/neuron7x/cognitive-core-engine/ci.yml?style=flat-square&logo=github)](https://github.com/neuron7x/cognitive-core-engine/actions/workflows/ci.yml) [![CodeQL](https://img.shields.io/github/actions/workflow/status/neuron7x/cognitive-core-engine/codeql.yml?style=flat-square&logo=github)](https://github.com/neuron7x/cognitive-core-engine/actions/workflows/codeql.yml) [![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](#) [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 <!-- [![PyPI](https://img.shields.io/pypi/v/cognitive-core-engine?style=flat-square&logo=pypi)](https://pypi.org/project/cognitive-core-engine/) -->
 <!-- [![Coverage](https://img.shields.io/badge/coverage-??%25-lightgrey?style=flat-square)](# "verification required") -->
 
