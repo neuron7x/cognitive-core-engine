@@ -6,7 +6,6 @@ This checklist tracks visual assets that need to be produced manually.
 - [ ] `media/api-demo.gif` — 10–15s screencast showing API request/response.
 - [ ] `media/cli-demo.gif` — 10–15s screencast of `cogctl` basic usage.
 - [ ] Replace `assets/logo.svg` with final logo design if available.
-- [ ] Replace `OWNER/REPO` placeholders in README badges with the actual repository slug.
 
 ## Capture commands
 
