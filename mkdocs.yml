@@ -1,1 +1,16 @@
-site_name: cognitive-core-engine\n
+site_name: Cognitive Core Engine
+site_url: https://neuron7x.github.io/cognitive-core-engine
+repo_url: https://github.com/neuron7x/cognitive-core-engine
+theme:
+  name: material
+nav:
+  - Home: index.md
+  - API: api.md
+  - Development: dev.md
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - toc:
+      permalink: true
+plugins: []

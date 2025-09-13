@@ -1,28 +1,26 @@
-.PHONY: setup lint test api docs build cov docker dev
+.PHONY: setup lint typecheck test cov run docs docker
 
 setup:
-	python -m venv .venv && . .venv/bin/activate && pip install -U pip && pip install -e .[dev] && pre-commit install
+	python -m pip install -U pip
+	pip install -e '.[api,test,dev,docs,security]'
 
 lint:
-	ruff check . && ruff format --check . && isort --check-only . && black --check .
+	ruff check . && black --check . && isort --check-only .
+
+typecheck:
+	mypy . --install-types --non-interactive
 
 test:
 	pytest
 
-api:
-	uvicorn cognitive_core.api.main:app --host 0.0.0.0 --port 8000 --reload
+cov:
+	pytest --cov=cognitive_core --cov-report=term-missing
+
+run:
+	uvicorn cognitive_core.api:app --host 0.0.0.0 --port 8000
 
 docs:
-	mkdocs build --strict || true
-
-build:
-	python -m build || true
-
-cov:
-	pytest --cov=src/cognitive_core --cov-report=xml
+	mkdocs serve -a 0.0.0.0:8001
 
 docker:
-	docker build -t cognitive-core:local .
-
-dev:
-	docker compose up -d --build
+	docker build -t cognitive-core-engine:local .

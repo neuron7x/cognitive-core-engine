@@ -2,105 +2,128 @@ name: CI
 
 on:
   push:
+    branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
       - run: echo "setup"
+
   lint:
     needs: setup
     runs-on: ubuntu-latest
-    permissions:
-      contents: write   # потрібно, щоб автокомітнути зміни форматування
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
-      - name: Install deps
-        run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[dev]" || pip install ruff black isort
-      - name: Auto-format (ruff+black+isort)
-        run: |
-          ruff check . --fix || true
-          black . || true
-          isort . || true
-      - name: Auto-commit formatting
-        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "style(fmt): auto-format via CI (ruff/black/isort)"
-          commit_user_name: bot-ci
-          commit_user_email: bot@example.com
-          skip_dirty_check: false
-      - name: Ruff (verify)
-        run: ruff check .
-      - name: Black (verify)
-        run: black --check .
-      - name: isort (verify)
-        run: isort --check-only .
+          python-version: '3.12'
+          cache: 'pip'
+      - run: |
+          python -m pip install -U pip
+          pip install -e ".[dev]"
+      - run: ruff check .
+      - run: black --check .
+      - run: isort --check-only .
 
   typecheck:
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install deps
-        run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[api,test,dev,security,docs]" || pip install -e .
-      - name: Mypy
-        run: mypy .
+          python-version: '3.11'
+          cache: 'pip'
+      - run: |
+          python -m pip install -U pip
+          pip install -e .
+          pip install mypy types-requests types-PyYAML
+      - run: mypy . --install-types --non-interactive
 
   test:
+    needs: [lint, typecheck]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
+          cache: 'pip'
       - name: Install deps
         run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[api,test,dev,security,docs]" || pip install -e .
+          python -m pip install -U pip
+          pip install -e ".[api,test]"
       - name: Pytest
-        run: pytest -q
+        run: pytest
+      - name: Upload coverage (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
 
   security:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install deps
-        run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[api,test,dev,security,docs]" || pip install -e .
+          python-version: '3.11'
+          cache: 'pip'
+      - run: |
+          python -m pip install -U pip
+          pip install -e ".[security]"
       - name: Bandit
-        run: bandit -r .
-      - name: Pip Audit
-        run: pip-audit --skip-deps --strict
+        run: bandit -r src/ -ll
+      - name: pip-audit (advisories)
+        run: pip-audit --progress-spinner off --strict || true
+      - name: Export audit JSON
+        run: pip-audit -f json -o pip-audit.json || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit
+          path: pip-audit.json
+
+  sbom:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          artifact-name: sbom
+          output-file: sbom.json
 
   docs:
+    if: github.ref == 'refs/heads/main'
+    needs: [test]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install deps
-        run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -e ".[api,test,dev,security,docs]" || pip install -e .
+          python-version: '3.11'
+          cache: 'pip'
+      - run: |
+          python -m pip install -U pip
+          pip install -e ".[docs]"
       - name: Build docs
         run: mkdocs build --strict
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
