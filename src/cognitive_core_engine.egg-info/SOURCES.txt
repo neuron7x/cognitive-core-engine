@@ -38,6 +38,7 @@ tests/test_cli.py
 tests/test_docs_build.py
 tests/test_dot_api.py
 tests/test_health_api.py
+tests/test_math_consistency.py
 tests/test_plugins_registry.py
 tests/test_solve2x2_api.py
 tests/test_sse_api.py

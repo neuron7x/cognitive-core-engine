@@ -9,9 +9,7 @@ from cognitive_core.app import services
 
 def _run_cli(args: str):
     for exe in ("cogctl", "python -m cognitive_core.cli"):
-        proc = subprocess.run(
-            shlex.split(f"{exe} {args}"), capture_output=True, text=True
-        )
+        proc = subprocess.run(shlex.split(f"{exe} {args}"), capture_output=True, text=True)
         if proc.returncode == 0 and proc.stdout.strip():
             return json.loads(proc.stdout)
     pytest.skip("CLI not available")
@@ -36,4 +34,3 @@ def test_solve2x2_consistency(api_client):
     cli_js = _run_cli("solve2x2 1 1 2 -1 4 0")
     assert service_x == pytest.approx(api_js["x"]) == pytest.approx(cli_js["x"])
     assert service_y == pytest.approx(api_js["y"]) == pytest.approx(cli_js["y"])
-
