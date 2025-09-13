@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, List
+from typing import Any, Awaitable, Callable, List, Union
 
 
 @dataclass(frozen=True)
@@ -32,10 +32,13 @@ class Run:
     artifacts: List[Artifact] = field(default_factory=list)
 
 
+Step = Union[Callable[[], Any], Callable[[], Awaitable[Any]]]
+
+
 @dataclass(frozen=True)
 class Pipeline:
-    """A simple synchronous pipeline definition."""
+    """A pipeline whose steps may be synchronous or asynchronous."""
 
     id: str
     name: str
-    steps: List[Callable[[], Artifact]]
+    steps: List[Step]
