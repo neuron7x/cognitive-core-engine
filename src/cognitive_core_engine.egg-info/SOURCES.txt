@@ -23,7 +23,6 @@ src/cognitive_core/llm/provider.py
 src/cognitive_core/llm/provider_async.py
 src/cognitive_core/llm/provider_wrapper.py
 src/cognitive_core/plugins/__init__.py
-src/cognitive_core/plugins/registry.py
 src/cognitive_core/plugins/example/__init__.py
 src/cognitive_core/plugins/example/math_plugin.py
 src/cognitive_core/utils/__init__.py
