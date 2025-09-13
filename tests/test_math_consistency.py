@@ -22,8 +22,7 @@ def test_dot_consistency(api_client):
     service_res = services.dot(a, b)
     api_res = api_client.post("/api/dot", json={"a": a, "b": b}).json()["dot"]
     cli_res = _run_cli("dotv 1,2,3 4,5,6")
-    assert service_res == pytest.approx(api_res)
-    assert service_res == pytest.approx(cli_res["dot"])
+    assert service_res == pytest.approx(api_res) == pytest.approx(cli_res["dot"])
 
 
 @pytest.mark.integration
