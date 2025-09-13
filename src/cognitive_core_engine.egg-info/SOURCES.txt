@@ -2,7 +2,6 @@ LICENSE
 README.md
 pyproject.toml
 src/cognitive_core/__init__.py
-src/cognitive_core/api.py
 src/cognitive_core/cli.py
 src/cognitive_core/db.py
 src/cognitive_core/rate_limiter.py

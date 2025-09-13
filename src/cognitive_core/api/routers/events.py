@@ -11,6 +11,6 @@ async def sse_gen():
         await anyio.sleep(0.2)
 
 
-@router.get("/sse")
+@router.get("/events/sse")
 async def sse():
     return StreamingResponse(sse_gen(), media_type="text/event-stream")
