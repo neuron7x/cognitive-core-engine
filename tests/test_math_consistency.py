@@ -28,8 +28,10 @@ def test_dot_consistency(api_client):
 
 @pytest.mark.integration
 def test_solve2x2_consistency(api_client):
-    params = {"a11": 1, "a12": 1, "a21": 2, "a22": -1, "b1": 4, "b2": 0}
-    service_x, service_y = services.solve_linear_2x2(**params)
+    params = {"a": 1, "b": 1, "c": 2, "d": -1, "e": 4, "f": 0}
+    service_x, service_y = services.solve_linear_2x2(
+        params["a"], params["b"], params["c"], params["d"], params["e"], params["f"]
+    )
     api_js = api_client.post("/api/solve2x2", json=params).json()
     cli_js = _run_cli("solve2x2 1 1 2 -1 4 0")
     assert service_x == pytest.approx(api_js["x"]) == pytest.approx(cli_js["x"])
