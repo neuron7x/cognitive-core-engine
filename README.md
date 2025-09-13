@@ -41,10 +41,35 @@ pip install -e '.[api,test,dev]'
 ## Швидкий старт
 
 ```bash
-python tools/gen_assets.py  # формує банер та демо-GIF
 cogctl --help
-pytest
 ```
+
+### Генерація ресурсів
+
+```bash
+python tools/gen_assets.py
+```
+
+Скрипт `tools/gen_assets.py` створює допоміжні графічні файли у каталогах:
+
+* `assets/logo.svg`
+* `assets/og-banner.png`
+* `media/api-demo.gif`
+* `media/cli-demo.gif`
+
+> Примітка: запуск скрипта є **ідемпотентним** — повторні запуски перегенерують артефакти без помилок.
+
+### Тестування
+
+```bash
+# Повний прогін
+pytest -q
+
+# Лише тести генерації ресурсів
+pytest tests/tools/test_gen_assets.py -q
+```
+
+Якщо ви запускаєте тести в CI, переконайтеся, що робочий каталог має права на запис у `assets/` та `media/`.
 
 ## API
 Демо-GIF можна згенерувати через `tools/gen_assets.py`.
@@ -70,12 +95,6 @@ cogctl dotv 1,2,3 4,5,6
 
 # Розв'язання системи 2x2
 cogctl solve2x2 1 2 3 4 5 6
-```
-
-## Тестування
-
-```bash
-pytest
 ```
 
 ## Архітектура

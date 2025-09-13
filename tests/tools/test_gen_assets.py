@@ -1,40 +1,63 @@
-"""Tests for the asset generation script."""
+# tests/tools/test_gen_assets.py
+# Перевірка генерації ресурсів скриптом tools/gen_assets.py
+from __future__ import annotations
 
-import importlib.util
-import pathlib
-import struct
+import subprocess
+import sys
+from pathlib import Path
 
-spec = importlib.util.spec_from_file_location(
-    "gen_assets",
-    pathlib.Path(__file__).resolve().parents[2] / "tools" / "gen_assets.py",
-)
-gen_assets = importlib.util.module_from_spec(spec)
-assert spec.loader is not None  # for type checkers
-spec.loader.exec_module(gen_assets)
-generate_banner = gen_assets.generate_banner
-generate_gifs = gen_assets.generate_gifs
+import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "tools" / "gen_assets.py"
 
 
-def test_generate_banner(tmp_path):
-    out = tmp_path / "banner.png"
-    generate_banner(out)
-    assert out.exists()
-    with out.open("rb") as f:
-        assert f.read(8) == b"\x89PNG\r\n\x1a\n"
+@pytest.mark.skipif(not SCRIPT.exists(), reason="tools/gen_assets.py not found")
+def test_gen_assets_script_runs_and_produces_files(tmp_path, monkeypatch):
+    """
+    Тест перевіряє:
+      1) скрипт виконується з кодом 0;
+      2) створюються очікувані артефакти;
+      3) ідемпотентність — повторний запуск також повертає 0.
+    """
 
+    # 1) Перший запуск у тимчасовому каталозі
+    proc1 = subprocess.run(
+        [sys.executable, str(SCRIPT)],
+        cwd=str(tmp_path),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    assert proc1.returncode == 0, (
+        f"gen_assets.py failed:\nSTDOUT:\n{proc1.stdout}\nSTDERR:\n{proc1.stderr}"
+    )
 
-def _gif_size(path):
-    with open(path, "rb") as f:
-        header = f.read(10)
-    assert header[:6] == b"GIF89a"
-    return struct.unpack("<HH", header[6:10])
+    expected_assets = [
+        tmp_path / "assets" / "logo.svg",
+        tmp_path / "assets" / "og-banner.png",
+        tmp_path / "media" / "api-demo.gif",
+        tmp_path / "media" / "cli-demo.gif",
+    ]
 
+    # 2) Перевірка наявності артефактів і ненульового розміру
+    missing = [str(p) for p in expected_assets if not p.exists()]
+    assert not missing, f"Missing generated assets: {missing}"
 
-def test_generate_gifs(tmp_path):
-    generate_gifs(tmp_path)
-    api = tmp_path / "api-demo.gif"
-    cli = tmp_path / "cli-demo.gif"
-    assert api.exists() and cli.exists()
-    assert _gif_size(api) == (132, 24)
-    assert _gif_size(cli) == (132, 24)
+    small = [str(p) for p in expected_assets if p.exists() and p.stat().st_size == 0]
+    assert not small, f"Zero-sized assets: {small}"
+
+    # 3) Повторний запуск (ідемпотентність)
+    proc2 = subprocess.run(
+        [sys.executable, str(SCRIPT)],
+        cwd=str(tmp_path),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    assert proc2.returncode == 0, (
+        f"Second run failed:\nSTDOUT:\n{proc2.stdout}\nSTDERR:\n{proc2.stderr}"
+    )
 

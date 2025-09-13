@@ -32,6 +32,27 @@ def save_png(path, width, height, get_pixel):
         f.write(png_chunk(b'IDAT', idat))
         f.write(png_chunk(b'IEND', b''))
 
+
+def generate_logo(path):
+    """Write the project logo as an SVG file.
+
+    Args:
+        path: Destination file path.
+    """
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">'
+        '<circle cx="60" cy="60" r="55" fill="#3b82f6"/>'
+        '<line x1="40" y1="50" x2="80" y2="50" stroke="#ffffff" stroke-width="4"/>'
+        '<line x1="40" y1="50" x2="60" y2="80" stroke="#ffffff" stroke-width="4"/>'
+        '<line x1="80" y1="50" x2="60" y2="80" stroke="#ffffff" stroke-width="4"/>'
+        '<circle cx="40" cy="50" r="8" fill="#ffffff"/>'
+        '<circle cx="80" cy="50" r="8" fill="#ffffff"/>'
+        '<circle cx="60" cy="80" r="8" fill="#ffffff"/>'
+        '</svg>'
+    )
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(svg)
+
 # Draw og-banner
 
 def banner_pixel(x, y):
@@ -365,5 +386,6 @@ def generate_gifs(out_dir):
 if __name__ == '__main__':
     os.makedirs('assets', exist_ok=True)
     os.makedirs('media', exist_ok=True)
+    generate_logo('assets/logo.svg')
     generate_banner('assets/og-banner.png')
     generate_gifs('media')
