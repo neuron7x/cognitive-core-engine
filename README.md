@@ -36,6 +36,7 @@
 ## Встановлення
 ```bash
 pip install -e '.[api,test,dev]'
+export OPENAI_API_KEY="sk-..."  # optional, for LLM features
 ```
 
 ## Швидкий старт
