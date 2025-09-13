@@ -13,12 +13,14 @@ async def verify_api_key(api_key: str | None = Security(api_key_header)) -> None
     """Validate the provided API key against configured settings.
 
     Authentication is disabled when ``settings.api_key`` is ``None`` so all
-    requests are allowed. When configured (including an empty string), requests
-    must include the correct key in the ``X-API-Key`` header or a ``403`` is
-    raised.
+    requests are allowed. When configured (including an empty string or multiple
+    comma-separated keys), requests must include one of the configured keys in
+    the ``X-API-Key`` header or a ``403`` is raised.
     """
-    if settings.api_key is None:
+    configured = settings.api_key
+    if configured is None:
         return
 
-    if api_key != settings.api_key:
+    valid_keys = {k.strip() for k in configured.split(",")}
+    if api_key not in valid_keys:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key")
