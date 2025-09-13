@@ -49,7 +49,12 @@ pytest
 python tools/gen_assets.py
 ```
 
-Скрипт створює допоміжні графічні файли у каталозі `assets`, зокрема `logo.svg` та `og-banner.png`.
+Скрипт [tools/gen_assets.py](tools/gen_assets.py) створює допоміжні графічні файли у каталогах `assets` та `media`, зокрема:
+
+- `assets/logo.svg`
+- `assets/og-banner.png`
+- `media/api-demo.gif`
+- `media/cli-demo.gif`
 
 ## API
 Докладніше див. [docs/api.md](docs/api.md).
