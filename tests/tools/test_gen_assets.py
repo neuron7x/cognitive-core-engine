@@ -15,6 +15,11 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def _gif_size(path: Path) -> tuple[int, int]:
+    with Image.open(path) as img:
+        return img.size
+
+
 def test_generate_banner(tmp_path: Path) -> None:
     first = gen_assets.generate_banner(tmp_path)
     assert first.exists()
@@ -34,14 +39,12 @@ def test_generate_gifs(tmp_path: Path) -> None:
     hashes = []
     for path in first_paths:
         assert path.suffix == ".gif"
-        with Image.open(path) as img:
-            assert img.size == GIF_SIZE
+        assert _gif_size(path) == GIF_SIZE
         hashes.append(_sha256(path))
 
     second_dir = tmp_path / "second"
     second_paths = gen_assets.generate_gifs(second_dir)
     assert len(first_paths) == len(second_paths)
     for path, expected_hash in zip(second_paths, hashes):
-        with Image.open(path) as img:
-            assert img.size == GIF_SIZE
+        assert _gif_size(path) == GIF_SIZE
         assert _sha256(path) == expected_hash
