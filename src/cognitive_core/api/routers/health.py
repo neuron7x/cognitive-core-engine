@@ -4,6 +4,8 @@ from importlib.metadata import PackageNotFoundError, version
 
 from fastapi import APIRouter
 
+from ...utils.telemetry import instrument_route
+
 from ...config.settings import Settings
 
 router = APIRouter()
@@ -12,18 +14,21 @@ settings = Settings()
 
 @router.get("/health")
 @router.get("/healthz")
+@instrument_route("health")
 def health() -> dict[str, str]:
     """Return a basic health status."""
     return {"status": "ok"}
 
 
 @router.get("/livez")
+@instrument_route("live")
 def live() -> dict[str, str]:
     """Simple liveness probe."""
     return {"status": "ok"}
 
 
 @router.get("/readyz")
+@instrument_route("ready")
 def ready() -> dict[str, str]:
     """Readiness probe with a trivial dependency check."""
     dependencies_ok = bool(settings.app_name)
@@ -31,6 +36,7 @@ def ready() -> dict[str, str]:
 
 
 @router.get("/v1/info")
+@instrument_route("info")
 def info() -> dict[str, str]:
     """Return application metadata."""
     try:

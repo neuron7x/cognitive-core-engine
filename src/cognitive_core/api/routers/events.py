@@ -2,6 +2,8 @@ import anyio
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
+from ...utils.telemetry import instrument_route
+
 router = APIRouter()
 
 
@@ -12,5 +14,6 @@ async def sse_gen():
 
 
 @router.get("/events/sse")
+@instrument_route("events_sse")
 async def sse():
     return StreamingResponse(sse_gen(), media_type="text/event-stream")
