@@ -12,7 +12,6 @@
     "src/cognitive_core/api.py",
     "src/cognitive_core/cli.py",
     "src/cognitive_core/core/math_utils.py",
-    "src/cognitive_core/plugins/registry.py",
     "tests/conftest.py",
     "tests/property/test_dot_property.py",
     "tests/repo/test_repo_sanity.py",
