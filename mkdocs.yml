@@ -3,3 +3,4 @@ nav:
   - API: api.md
   - Architecture: architecture.md
   - Operations: operations.md
+  - Plugins: plugins.md
