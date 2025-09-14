@@ -1,2 +1,3 @@
 # Ignore Python egg-info directories
 *.egg-info/
+# Prevent packaging metadata from being tracked
