@@ -13,6 +13,7 @@ dependencies = [
     "typing-extensions>=4.8",
     "fastapi>=0.111",
     "uvicorn>=0.29",
+    "httpx>=0.25",
 ]
 
 [project.optional-dependencies]
