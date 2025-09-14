@@ -10,6 +10,9 @@ class Artifact:
 
     name: str
     data: Any
+    logic: float | None = None
+    semantic: float | None = None
+    narrative: float | None = None
 
 
 @dataclass(frozen=True)
