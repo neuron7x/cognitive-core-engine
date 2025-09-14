@@ -3,7 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from ...core.agents_router import AgentsRouter
 from ...core.pipeline_executor import PipelineExecutor
+from ...domain.agents import DebateRound
 from ...domain.pipelines import Artifact, Pipeline
 from ...utils.telemetry import instrument_route, record_llm_tokens
 
@@ -20,10 +22,17 @@ def _sample_step() -> Artifact:
 
 PIPELINES["sample"] = Pipeline(id="sample", name="Sample", steps=[_sample_step])
 executor = PipelineExecutor()
+agents_router = AgentsRouter()
 
 
 class RunRequest(BaseModel):
     pipeline_id: str
+
+
+class DebateRequest(BaseModel):
+    prompt: str
+    roles: list[str]
+    concurrent: bool = False
 
 
 @router.get("/v1/pipelines/{pipeline_id}")
@@ -48,3 +57,11 @@ def run_pipeline(req: RunRequest):
         "status": run.status,
         "artifacts": [a.name for a in run.artifacts],
     }
+
+
+@router.post("/pipelines/aots_debate")
+@instrument_route("aots_debate")
+def aots_debate(req: DebateRequest) -> DebateRound:
+    round = agents_router.run(req.prompt, req.roles, concurrent=req.concurrent)
+    record_llm_tokens("aots_debate", len(round.responses))
+    return round
