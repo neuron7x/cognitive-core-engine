@@ -1,2 +1,2 @@
-# Ignore build-generated egg-info directories
+# Ignore Python egg-info directories
 *.egg-info/
