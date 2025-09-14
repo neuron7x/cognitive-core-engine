@@ -1,0 +1,3 @@
+name: critic
+system_prompt: "Highlight potential issues with the proposal."
+model: mock
