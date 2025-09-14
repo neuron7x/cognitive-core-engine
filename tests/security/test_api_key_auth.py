@@ -8,8 +8,9 @@ from cognitive_core.api import auth
 @pytest.mark.integration
 def test_api_key_enforced(api_client, monkeypatch):
     monkeypatch.setenv("COG_API_KEY", "secret")
-    monkeypatch.setattr(config, "settings", config.Settings())
-    monkeypatch.setattr(auth, "settings", config.settings)
+    settings = config.Settings()
+    monkeypatch.setattr(config, "settings", settings)
+    monkeypatch.setattr(auth, "settings", settings)
 
     r = api_client.get("/api/health")
     assert r.status_code == 403
@@ -21,7 +22,9 @@ def test_api_key_enforced(api_client, monkeypatch):
 @pytest.mark.integration
 def test_no_api_key_configured(api_client, monkeypatch):
     monkeypatch.delenv("COG_API_KEY", raising=False)
-    monkeypatch.setattr(auth, "settings", Settings())
+    settings = config.Settings()
+    monkeypatch.setattr(config, "settings", settings)
+    monkeypatch.setattr(auth, "settings", settings)
 
     r = api_client.get("/api/health")
     assert r.status_code == 200
@@ -30,7 +33,9 @@ def test_no_api_key_configured(api_client, monkeypatch):
 @pytest.mark.integration
 def test_empty_api_key_requires_header(api_client, monkeypatch):
     monkeypatch.setenv("COG_API_KEY", "")
-    monkeypatch.setattr(auth, "settings", Settings())
+    settings = config.Settings()
+    monkeypatch.setattr(config, "settings", settings)
+    monkeypatch.setattr(auth, "settings", settings)
 
     r = api_client.get("/api/health")
     assert r.status_code == 403
@@ -42,7 +47,9 @@ def test_empty_api_key_requires_header(api_client, monkeypatch):
 @pytest.mark.integration
 def test_multiple_api_keys(api_client, monkeypatch):
     monkeypatch.setenv("COG_API_KEY", "secret,altsecret")
-    monkeypatch.setattr(auth, "settings", Settings())
+    settings = config.Settings()
+    monkeypatch.setattr(config, "settings", settings)
+    monkeypatch.setattr(auth, "settings", settings)
 
     r_missing = api_client.get("/api/health")
     assert r_missing.status_code == 403
@@ -61,7 +68,9 @@ def test_multiple_api_keys(api_client, monkeypatch):
 @pytest.mark.integration
 def test_random_invalid_keys_rejected(random_key, api_client, monkeypatch):
     monkeypatch.setenv("COG_API_KEY", "secret")
-    monkeypatch.setattr(auth, "settings", Settings())
+    settings = config.Settings()
+    monkeypatch.setattr(config, "settings", settings)
+    monkeypatch.setattr(auth, "settings", settings)
 
     assume(random_key != "secret")
     r = api_client.get("/api/health", headers={"X-API-Key": random_key})
