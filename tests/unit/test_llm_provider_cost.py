@@ -31,3 +31,4 @@ def test_cost_computation_with_usage(monkeypatch):
     expected = compute_cost_from_usage(adapter.model, usage)
     assert result["_cost_usd"] == expected
     assert result["_usage"] == usage
+    assert result["_tokens"] == usage["prompt_tokens"] + usage["completion_tokens"]

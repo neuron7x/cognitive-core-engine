@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
 from ...core.pipeline_executor import PipelineExecutor
-from ...domain.pipelines import Artifact, Pipeline
+from ...domain.pipelines import Artifact, Pipeline, Run
 from ...utils.telemetry import instrument_route, record_llm_tokens
 
 router = APIRouter()
@@ -12,6 +12,7 @@ router = APIRouter()
 
 # In-memory registry for demo purposes
 PIPELINES: dict[str, Pipeline] = {}
+RUNS: dict[str, Run] = {}
 
 
 def _sample_step() -> Artifact:
@@ -37,12 +38,15 @@ def get_pipeline(pipeline_id: str):
 
 @router.post("/v1/pipelines/run")
 @instrument_route("run_pipeline")
-def run_pipeline(req: RunRequest):
+def run_pipeline(req: RunRequest, response: Response):
     pipeline = PIPELINES.get(req.pipeline_id)
     if not pipeline:
         raise HTTPException(status_code=404, detail="Pipeline not found")
     run = executor.execute(pipeline)
-    record_llm_tokens("run_pipeline", len(run.artifacts))
+    RUNS[run.id] = run
+    tokens = len(run.artifacts)
+    record_llm_tokens("run_pipeline", tokens)
+    response.headers["X-Token-Count"] = str(tokens)
     return {
         "run_id": run.id,
         "status": run.status,

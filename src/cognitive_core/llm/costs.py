@@ -14,3 +14,12 @@ def compute_cost_from_usage(model: str, usage: dict, pricing_map: dict | None = 
         "prompt_per_token", defaults["prompt_per_token"]
     ) + completion_tokens * pricing.get("completion_per_token", defaults["completion_per_token"])
     return float(cost)
+
+
+def token_count_from_usage(usage: dict | None) -> int:
+    """Return the total number of tokens from a provider usage dict."""
+    if not usage or not isinstance(usage, dict):
+        return 0
+    prompt_tokens = usage.get("prompt_tokens", 0) or 0
+    completion_tokens = usage.get("completion_tokens", 0) or 0
+    return int(prompt_tokens + completion_tokens)

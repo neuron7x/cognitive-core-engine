@@ -33,6 +33,7 @@ except Exception:  # pragma: no cover - fallback when library missing
 
 REQUEST_LATENCY = Histogram("request_latency_seconds", "Request latency", ["route"])
 LLM_TOKENS = Counter("llm_tokens_total", "LLM tokens processed", ["route"])
+REQUEST_ERRORS = Counter("request_errors_total", "Request errors", ["route"])
 
 
 def setup_telemetry(service_name: str = "cognitive-core-engine") -> None:
@@ -55,8 +56,15 @@ def instrument_route(route_name: str):
                 span_cm = tracer.start_as_current_span(route_name) if tracer else contextlib.nullcontext()
                 with span_cm:
                     start = time.perf_counter()
-                    result = await func(*args, **kwargs)
-                    REQUEST_LATENCY.labels(route=route_name).observe(time.perf_counter() - start)
+                    try:
+                        result = await func(*args, **kwargs)
+                    except Exception:
+                        REQUEST_ERRORS.labels(route=route_name).inc()
+                        raise
+                    finally:
+                        REQUEST_LATENCY.labels(route=route_name).observe(
+                            time.perf_counter() - start
+                        )
                     return result
 
             return async_wrapper
@@ -67,8 +75,15 @@ def instrument_route(route_name: str):
                 span_cm = tracer.start_as_current_span(route_name) if tracer else contextlib.nullcontext()
                 with span_cm:
                     start = time.perf_counter()
-                    result = func(*args, **kwargs)
-                    REQUEST_LATENCY.labels(route=route_name).observe(time.perf_counter() - start)
+                    try:
+                        result = func(*args, **kwargs)
+                    except Exception:
+                        REQUEST_ERRORS.labels(route=route_name).inc()
+                        raise
+                    finally:
+                        REQUEST_LATENCY.labels(route=route_name).observe(
+                            time.perf_counter() - start
+                        )
                     return result
 
             return sync_wrapper

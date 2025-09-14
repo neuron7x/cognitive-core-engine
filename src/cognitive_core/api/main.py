@@ -5,6 +5,7 @@ from ..config import settings
 from ..utils.telemetry import setup_telemetry
 from .auth import verify_api_key
 from .rate_limit import RateLimitMiddleware
+from .logging_middleware import LoggingMiddleware
 try:  # pragma: no cover - allow running without prometheus-client installed
     from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 except Exception:  # pragma: no cover - fallback
@@ -16,6 +17,7 @@ from .routers import events, health, math, pipelines
 setup_telemetry(settings.app_name)
 app = FastAPI(title=settings.app_name, dependencies=[Depends(verify_api_key)])
 app.add_middleware(RateLimitMiddleware)
+app.add_middleware(LoggingMiddleware)
 # Register application routers
 app.include_router(health.router, prefix=settings.api_prefix, tags=["health"])
 app.include_router(math.router, prefix=settings.api_prefix, tags=["math"])

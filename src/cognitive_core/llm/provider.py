@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from .costs import compute_cost_from_usage
+from .costs import compute_cost_from_usage, token_count_from_usage
 
 try:  # pragma: no cover - runtime optional dependency
     import requests
@@ -63,6 +63,7 @@ class OpenAIAdapter(LLMProvider):
                 text = ch.get("text") or ""
 
         usage = jr.get("usage") if isinstance(jr, dict) else None
+        tokens = token_count_from_usage(usage)
 
         cost = 0.0
         try:
@@ -74,7 +75,7 @@ class OpenAIAdapter(LLMProvider):
         except Exception:
             cost = 0.0
 
-        return {"text": text, "_cost_usd": cost, "_usage": usage, "_raw": jr}
+        return {"text": text, "_cost_usd": cost, "_usage": usage, "_tokens": tokens, "_raw": jr}
 
 
 # Provider wrapper will be added by rate_limiter integration
