@@ -75,22 +75,19 @@ curl -s -X POST http://localhost:8000/api/dot \
 
 ## Security & Configuration
 
-Скопіюйте приклад конфігурації та налаштуйте ключі:
+Скопіюйте приклад файлу та налаштуйте ключ API:
 
 ```bash
 cp .env.example .env
 ```
 
-Встановіть `COG_API_KEYS` (кома-розділений список) та інші змінні середовища.
+Відредагуйте `.env`, встановивши `COG_API_KEY=your-key-here`.
 
-Приклад запиту з заголовком `X-API-Key`:
+Надсилайте запити з заголовком `X-API-Key`:
 
 ```bash
-curl -H "X-API-Key: your_api_key" http://localhost:8000/api/health
+curl -H "X-API-Key: your-key-here" http://localhost:8000/api/health
 ```
-
-Налаштування обмеження швидкості керуються змінними `REDIS_URL`,
-`RATE_LIMIT_CAPACITY` та `RATE_LIMIT_REFILL_PER_SEC`.
 
 ### Troubleshooting
 
