@@ -81,7 +81,8 @@ curl -s -X POST http://localhost:8000/api/dot \
 cp .env.example .env
 ```
 
-Встановіть `COG_API_KEYS` (кома-розділений список) та інші змінні середовища.
+У `.env` встановіть `COG_API_KEY` та інші змінні середовища
+(`COG_APP_NAME`, `COG_API_PREFIX`, `COG_RATE_LIMIT_RPS`, `COG_RATE_LIMIT_BURST`).
 
 Приклад запиту з заголовком `X-API-Key`:
 
@@ -89,8 +90,8 @@ cp .env.example .env
 curl -H "X-API-Key: your_api_key" http://localhost:8000/api/health
 ```
 
-Налаштування обмеження швидкості керуються змінними `REDIS_URL`,
-`RATE_LIMIT_CAPACITY` та `RATE_LIMIT_REFILL_PER_SEC`.
+Параметри обмеження швидкості контролюються змінними `COG_RATE_LIMIT_RPS`
+та `COG_RATE_LIMIT_BURST`.
 
 ### Troubleshooting
 
