@@ -56,6 +56,21 @@ python tools/gen_assets.py
 - `media/api-demo.gif`
 - `media/cli-demo.gif`
 
+## Security & Configuration
+API можна захистити за допомогою API key. Задайте ключ у `.env` файлі або змінній середовища.
+
+```bash
+cp .env.example .env
+echo "COG_API_KEYS=secret1,secret2" >> .env
+uvicorn cognitive_core.api.main:app
+```
+
+Усі запити повинні містити заголовок `X-API-Key`:
+
+```bash
+curl -H "X-API-Key: secret1" http://localhost:8000/api/health
+```
+
 ## API
 Докладніше див. [docs/api.md](docs/api.md).
 
