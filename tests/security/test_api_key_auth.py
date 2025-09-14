@@ -75,3 +75,25 @@ def test_random_invalid_keys_rejected(random_key, api_client, monkeypatch):
     assume(random_key != "secret")
     r = api_client.get("/api/health", headers={"X-API-Key": random_key})
     assert r.status_code == 403
+
+
+@pytest.mark.integration
+def test_health_allows_access_when_key_unset(api_client, monkeypatch):
+    monkeypatch.delenv("COG_API_KEY", raising=False)
+    settings = config.Settings()
+    monkeypatch.setattr(config, "settings", settings)
+    monkeypatch.setattr(auth, "settings", settings)
+
+    response = api_client.get("/api/health")
+    assert response.status_code == 200
+
+
+@pytest.mark.integration
+def test_health_rejects_without_key_when_env_empty(api_client, monkeypatch):
+    monkeypatch.setenv("COG_API_KEY", "")
+    settings = config.Settings()
+    monkeypatch.setattr(config, "settings", settings)
+    monkeypatch.setattr(auth, "settings", settings)
+
+    response = api_client.get("/api/health")
+    assert response.status_code == 403
