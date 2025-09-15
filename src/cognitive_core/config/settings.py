@@ -1,5 +1,14 @@
 from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
+try:  # pragma: no cover - allow operation without optional dependency
+    from pydantic_settings import BaseSettings, SettingsConfigDict
+except ModuleNotFoundError:  # pragma: no cover - fallback shim
+    from pydantic import BaseModel, ConfigDict
+
+    class BaseSettings(BaseModel):
+        model_config = ConfigDict()
+
+    SettingsConfigDict = ConfigDict
 
 
 class Settings(BaseSettings):

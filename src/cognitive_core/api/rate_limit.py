@@ -1,11 +1,39 @@
 from __future__ import annotations
 
+import logging
+import threading
+import time
+
 from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from ..config import settings
 from ..rate_limiter import RedisBucketLimiter
+
+
+logger = logging.getLogger(__name__)
+
+
+class InMemoryBucketLimiter:
+    """Simple token bucket limiter stored in process memory."""
+
+    def __init__(self, capacity: int, refill_per_sec: float) -> None:
+        self.capacity = float(capacity)
+        self.refill_per_sec = float(refill_per_sec)
+        self._state: dict[str, tuple[float, float]] = {}
+        self._lock = threading.Lock()
+
+    def allow(self, token: str, needed: float = 1.0) -> bool:
+        now = time.time()
+        with self._lock:
+            tokens, last_ts = self._state.get(token, (self.capacity, now))
+            tokens = min(self.capacity, tokens + (now - last_ts) * self.refill_per_sec)
+            allowed = tokens >= needed
+            if allowed:
+                tokens -= needed
+            self._state[token] = (tokens, now)
+            return allowed
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -18,8 +46,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 capacity=settings.rate_limit_burst,
                 refill_per_sec=settings.rate_limit_rps,
             )
-        except Exception:
-            self.limiter = None
+        except Exception as exc:
+            logger.warning(
+                "Redis rate limiter unavailable (%s); falling back to in-memory limiter.",
+                exc,
+            )
+            self.limiter = InMemoryBucketLimiter(
+                capacity=settings.rate_limit_burst,
+                refill_per_sec=settings.rate_limit_rps,
+            )
 
     async def dispatch(self, request: Request, call_next):
         if (
