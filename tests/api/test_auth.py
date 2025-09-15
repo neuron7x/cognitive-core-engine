@@ -16,20 +16,18 @@ def _reload():
     importlib.reload(auth)
 
 
-def test_no_auth_when_api_key_none(monkeypatch):
+def test_server_error_when_api_key_missing(monkeypatch):
     monkeypatch.delenv("COG_API_KEY", raising=False)
     _reload()
     r = client.get("/api/health")
-    assert r.status_code == 200
+    assert r.status_code == 500
 
 
-def test_requires_auth_when_api_key_empty(monkeypatch):
+def test_server_error_when_api_key_empty(monkeypatch):
     monkeypatch.setenv("COG_API_KEY", "")
     _reload()
     r = client.get("/api/health")
-    assert r.status_code == 403
-    r = client.get("/api/health", headers={"X-API-Key": ""})
-    assert r.status_code == 200
+    assert r.status_code == 500
 
 
 def test_allows_valid_api_key(monkeypatch):
