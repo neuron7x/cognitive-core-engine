@@ -81,8 +81,11 @@ curl -s -X POST http://localhost:8000/api/dot \
 cp .env.example .env
 ```
 
-У `.env` встановіть `COG_API_KEY` та інші змінні середовища
-(`COG_APP_NAME`, `COG_API_PREFIX`, `COG_RATE_LIMIT_RPS`, `COG_RATE_LIMIT_BURST`).
+У `.env` **обов'язково** встановіть ненульове значення `COG_API_KEY` та інші
+змінні середовища (`COG_APP_NAME`, `COG_API_PREFIX`, `COG_RATE_LIMIT_RPS`,
+`COG_RATE_LIMIT_BURST`). Сервіс повертає помилку `500`, доки ключ не
+налаштовано, тому безпечно використовувати репозиторій без попередньо
+визначеного секрету.
 
 Приклад запиту з заголовком `X-API-Key`:
 
