@@ -17,7 +17,7 @@ class AgentsRouter:
     """Utility to run multiple roles against a prompt sequentially or concurrently."""
 
     def __init__(self, config_dir: str | Path = "config/agents"):
-        self.config_dir = Path(config_dir)
+        self.config_dir = Path(config_dir).resolve()
         self.provider = get_provider()
 
     # ------------------------------------------------------------------
@@ -25,7 +25,16 @@ class AgentsRouter:
     def load_role(self, name: str) -> AgentConfig:
         """Load a role configuration from YAML."""
 
-        path = self.config_dir / f"{name}.yaml"
+        if ".." in name or "/" in name or "\\" in name:
+            raise ValueError(f"Invalid role name: {name}")
+
+        path = (self.config_dir / f"{name}.yaml").resolve()
+
+        try:
+            path.relative_to(self.config_dir)
+        except ValueError as exc:
+            raise ValueError(f"Invalid role name: {name}") from exc
+
         with path.open() as f:
             if yaml:
                 data = yaml.safe_load(f) or {}
