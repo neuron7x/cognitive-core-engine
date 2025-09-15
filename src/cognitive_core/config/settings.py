@@ -24,5 +24,9 @@ class Settings(BaseSettings):
     )
     rate_limit_rps: float = 5.0
     rate_limit_burst: int = 10
+    allowed_origins: list[str] = Field(
+        default_factory=list,
+        description="List of allowed CORS origins for the public API.",
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="COG_")
