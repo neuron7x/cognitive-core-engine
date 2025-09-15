@@ -1,9 +1,27 @@
-
 FROM python:3.12-slim
-WORKDIR /app
+
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-COPY . /app
-RUN pip install --upgrade pip && pip install --no-cache-dir requests httpx redis sqlalchemy alembic psycopg2-binary prometheus-client structlog
+WORKDIR /app
+
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir \
+        requests \
+        httpx \
+        redis \
+        sqlalchemy \
+        alembic \
+        psycopg2-binary \
+        prometheus-client \
+        structlog
+
+RUN groupadd -g 1000 appuser \
+    && useradd -m -u 1000 -g appuser appuser \
+    && chown -R appuser:appuser /app
+
+USER appuser
+
+COPY --chown=appuser:appuser . /app
+
 EXPOSE 8000
 CMD ["uvicorn", "cognitive_core.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
