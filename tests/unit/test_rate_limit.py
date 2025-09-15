@@ -1,0 +1,52 @@
+import pytest
+
+try:
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+except Exception:  # pragma: no cover - allow running without fastapi installed
+    pytest.skip("fastapi not installed; skipping rate limit tests", allow_module_level=True)
+
+from cognitive_core.api.rate_limit import InMemoryBucketLimiter, RateLimitMiddleware
+from cognitive_core.config import settings
+
+
+def test_rate_limit_falls_back_to_in_memory(monkeypatch):
+    class FailingLimiter:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("redis missing")
+
+    monkeypatch.setattr(
+        "cognitive_core.api.rate_limit.RedisBucketLimiter", FailingLimiter
+    )
+
+    app = FastAPI()
+    middleware = RateLimitMiddleware(app)
+
+    assert isinstance(middleware.limiter, InMemoryBucketLimiter)
+
+
+def test_in_memory_rate_limiter_enforces_limits(monkeypatch):
+    class FailingLimiter:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("redis missing")
+
+    monkeypatch.setattr(
+        "cognitive_core.api.rate_limit.RedisBucketLimiter", FailingLimiter
+    )
+    monkeypatch.setattr(settings, "rate_limit_burst", 1)
+    monkeypatch.setattr(settings, "rate_limit_rps", 0.0)
+
+    app = FastAPI()
+    app.add_middleware(RateLimitMiddleware)
+
+    @app.get("/api/test")
+    def read() -> dict[str, bool]:
+        return {"ok": True}
+
+    with TestClient(app) as client:
+        headers = {"X-API-Key": "fallback"}
+        first = client.get("/api/test", headers=headers)
+        second = client.get("/api/test", headers=headers)
+
+    assert first.status_code == 200
+    assert second.status_code == 429
