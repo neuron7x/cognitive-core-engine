@@ -1,5 +1,6 @@
 """Authentication helpers for API endpoints."""
 
+import hmac
 import logging
 
 from fastapi import HTTPException, Security, status
@@ -22,6 +23,9 @@ async def verify_api_key(api_key: str | None = Security(api_key_header)) -> None
     header must match one of the configured keys or a ``403`` is raised.
     """
     configured_key = settings.api_key
+    if not isinstance(configured_key, str):
+        configured_key = getattr(configured_key, "default", configured_key)
+
     if configured_key is None or not configured_key.strip():
         logger.critical(
             "API key is not configured. Set the COG_API_KEY environment variable "
@@ -32,7 +36,7 @@ async def verify_api_key(api_key: str | None = Security(api_key_header)) -> None
             detail="API key is not configured",
         )
 
-    valid_keys = {k.strip() for k in configured_key.split(",") if k.strip()}
+    valid_keys = [k.strip() for k in configured_key.split(",") if k.strip()]
     if not valid_keys:
         logger.critical(
             "API key configuration did not yield any usable keys. Check COG_API_KEY.",
@@ -42,5 +46,9 @@ async def verify_api_key(api_key: str | None = Security(api_key_header)) -> None
             detail="API key configuration invalid",
         )
 
-    if api_key not in valid_keys:
+    provided_key = api_key or ""
+    for valid_key in valid_keys:
+        if hmac.compare_digest(valid_key, provided_key):
+            break
+    else:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key")
