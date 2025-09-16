@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from pathlib import Path
 from typing import Iterable, List
 
@@ -25,15 +26,20 @@ class AgentsRouter:
     def load_role(self, name: str) -> AgentConfig:
         """Load a role configuration from YAML."""
 
-        if ".." in name or "/" in name or "\\" in name:
+        if not name:
+            raise ValueError("Role name must not be empty")
+
+        separators = {os.sep}
+        if os.altsep:
+            separators.add(os.altsep)
+
+        if ".." in name or any(sep in name for sep in separators):
             raise ValueError(f"Invalid role name: {name}")
 
         path = (self.config_dir / f"{name}.yaml").resolve()
 
-        try:
-            path.relative_to(self.config_dir)
-        except ValueError as exc:
-            raise ValueError(f"Invalid role name: {name}") from exc
+        if not path.is_relative_to(self.config_dir):
+            raise ValueError(f"Invalid role name: {name}")
 
         with path.open() as f:
             if yaml:
