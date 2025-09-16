@@ -106,9 +106,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             self.limiter
             and request.url.path.startswith(settings.api_prefix)
         ):
-            token = request.headers.get("X-API-Key")
-            if not token and request.client:
-                token = request.client.host
-            if token and not self.limiter.allow(token):
+            client_host = request.client.host if request.client else None
+            if client_host and not self.limiter.allow(f"ip:{client_host}"):
+                return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
+
+            api_key = request.headers.get("X-API-Key")
+            if api_key and not self.limiter.allow(f"key:{api_key}"):
                 return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
         return await call_next(request)
