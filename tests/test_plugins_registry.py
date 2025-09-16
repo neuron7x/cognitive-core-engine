@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cognitive_core.plugins import REGISTRY, discover, dispatch
+from cognitive_core.plugins import REGISTRY, PluginMetadata, discover, dispatch, register
 from cognitive_core.plugins.plugin_loader import (
     ALLOWED_PLUGINS,
     PluginSpec,
@@ -133,3 +133,31 @@ def test_discover_rejects_unallowlisted_entrypoint(monkeypatch):
 
     with pytest.raises(PluginVerificationError):
         discover()
+
+
+def test_register_rejects_duplicate_plugins():
+    class DummyPlugin:
+        def run(self, payload: dict) -> dict:
+            return payload
+
+    metadata = PluginMetadata(name="dummy", version="1.0.0", requirements=["dep>=1"])
+    first_plugin = DummyPlugin()
+    register(first_plugin, metadata)
+
+    # Re-registering with identical metadata is a no-op to support entry-point
+    # loading that instantiates a fresh plugin instance.
+    register(DummyPlugin(), metadata)
+
+    with pytest.raises(PluginVerificationError):
+        register(DummyPlugin(), PluginMetadata(name="dummy", version="2.0.0", requirements=[]))
+
+
+def test_plugin_metadata_validation():
+    with pytest.raises(PluginVerificationError):
+        PluginMetadata(name="", version="1.0.0", requirements=[])
+
+    with pytest.raises(PluginVerificationError):
+        PluginMetadata(name="valid", version="", requirements=[])
+
+    meta = PluginMetadata(name="demo", version="1.2.3", requirements=["dep>=1", "  ", "other"])
+    assert meta.requirements == ("dep>=1", "other")

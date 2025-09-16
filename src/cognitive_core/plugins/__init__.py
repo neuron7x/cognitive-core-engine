@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib.metadata import EntryPoint, entry_points
 from typing import Iterable, Protocol, Sequence
 
@@ -19,7 +19,22 @@ class PluginMetadata:
 
     name: str
     version: str
-    requirements: list[str]
+    requirements: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self) -> None:
+        if not self.name or not self.name.strip():
+            raise PluginVerificationError("Plugin metadata name must not be empty.")
+
+        if not self.version or not self.version.strip():
+            raise PluginVerificationError("Plugin metadata version must not be empty.")
+
+        normalized_requirements = []
+        for requirement in self.requirements:
+            text = str(requirement).strip()
+            if text:
+                normalized_requirements.append(text)
+
+        self.requirements = tuple(normalized_requirements)
 
 
 # Maps plugin name to a tuple of (metadata, plugin instance)
@@ -28,6 +43,20 @@ REGISTRY: dict[str, tuple[PluginMetadata, Plugin]] = {}
 
 def register(plugin: Plugin, metadata: PluginMetadata) -> None:
     """Register a plugin with associated metadata."""
+
+    existing = REGISTRY.get(metadata.name)
+    if existing is not None:
+        registered_meta, _registered_plugin = existing
+        if registered_meta == metadata:
+            # Allow idempotent registration when metadata is identical. The
+            # underlying plugin may be a new instance (e.g. from entry points),
+            # but integrity checks ensure it originates from the allowlisted
+            # module.
+            return
+
+        raise PluginVerificationError(
+            f"Plugin '{metadata.name}' is already registered and cannot be replaced."
+        )
 
     REGISTRY[metadata.name] = (metadata, plugin)
 
