@@ -10,7 +10,7 @@ from cognitive_core.api.rate_limit import InMemoryBucketLimiter, RateLimitMiddle
 from cognitive_core.config import settings
 
 
-def test_rate_limit_falls_back_to_in_memory(monkeypatch):
+def test_rate_limit_falls_back_to_in_memory(monkeypatch, caplog):
     class FailingLimiter:
         def __init__(self, *args, **kwargs):
             raise RuntimeError("redis missing")
@@ -20,9 +20,30 @@ def test_rate_limit_falls_back_to_in_memory(monkeypatch):
     )
 
     app = FastAPI()
-    middleware = RateLimitMiddleware(app)
+    with caplog.at_level("WARNING"):
+        middleware = RateLimitMiddleware(app)
 
     assert isinstance(middleware.limiter, InMemoryBucketLimiter)
+    assert any("falling back to in-memory limiter" in message for message in caplog.messages)
+
+
+def test_rate_limit_logs_when_redis_dependency_missing(monkeypatch, caplog):
+    monkeypatch.setattr(
+        "cognitive_core.api.rate_limit.RedisBucketLimiter", None, raising=False
+    )
+    monkeypatch.setattr(
+        "cognitive_core.api.rate_limit._redis_import_error",
+        RuntimeError("redis package unavailable"),
+        raising=False,
+    )
+
+    app = FastAPI()
+
+    with caplog.at_level("WARNING"):
+        middleware = RateLimitMiddleware(app)
+
+    assert isinstance(middleware.limiter, InMemoryBucketLimiter)
+    assert any("redis package unavailable" in message for message in caplog.messages)
 
 
 def test_in_memory_rate_limiter_enforces_limits(monkeypatch):
