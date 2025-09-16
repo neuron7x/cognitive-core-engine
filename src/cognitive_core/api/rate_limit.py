@@ -9,7 +9,16 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from ..config import settings
-from ..rate_limiter import RedisBucketLimiter
+
+_redis_import_error: Exception | None = None
+
+try:
+    from ..rate_limiter import RedisBucketLimiter
+except Exception as exc:
+    RedisBucketLimiter = None  # type: ignore[assignment]
+    _redis_import_error = exc
+else:
+    _redis_import_error = None
 
 
 logger = logging.getLogger(__name__)
@@ -41,20 +50,28 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app):
         super().__init__(app)
-        try:
-            self.limiter = RedisBucketLimiter(
-                capacity=settings.rate_limit_burst,
-                refill_per_sec=settings.rate_limit_rps,
+        limiter_kwargs = {
+            "capacity": settings.rate_limit_burst,
+            "refill_per_sec": settings.rate_limit_rps,
+        }
+
+        if RedisBucketLimiter is None:
+            reason = _redis_import_error or "redis client not available"
+            logger.warning(
+                "Redis rate limiter unavailable (%s); falling back to in-memory limiter.",
+                reason,
             )
+            self.limiter = InMemoryBucketLimiter(**limiter_kwargs)
+            return
+
+        try:
+            self.limiter = RedisBucketLimiter(**limiter_kwargs)
         except Exception as exc:
             logger.warning(
                 "Redis rate limiter unavailable (%s); falling back to in-memory limiter.",
                 exc,
             )
-            self.limiter = InMemoryBucketLimiter(
-                capacity=settings.rate_limit_burst,
-                refill_per_sec=settings.rate_limit_rps,
-            )
+            self.limiter = InMemoryBucketLimiter(**limiter_kwargs)
 
     async def dispatch(self, request: Request, call_next):
         if (
