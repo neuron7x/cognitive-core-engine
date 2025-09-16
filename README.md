@@ -16,6 +16,7 @@
 - [Security & Configuration](#security--configuration)
   - [Troubleshooting](#troubleshooting)
 - [CLI](#cli)
+- [Observability / Спостережуваність](#observability--спостережуваність)
 - [Тестування](#тестування)
 - [Architecture Overview / Огляд архітектури](#architecture-overview--огляд-архітектури)
 - [Дорожня карта](#дорожня-карта)
@@ -28,10 +29,11 @@
 Проєкт включає API, CLI та інструменти для розробки.
 
 ## Особливості
-- Відкритий HTTP API на FastAPI  
-- CLI `cogctl`  
-- Плагінна система  
-- Тести та CI  
+- Відкритий HTTP API на FastAPI
+- CLI `cogctl`
+- Плагінна система
+- Тести та CI
+- Структуровані JSON-логи з метриками Prometheus та трасуванням OpenTelemetry
 
 ## Встановлення
 ```bash
@@ -87,6 +89,11 @@ cp .env.example .env
 налаштовано, тому безпечно використовувати репозиторій без попередньо
 визначеного секрету.
 
+Журнальний рівень регулюється змінною `COG_LOG_LEVEL` (`INFO` за промовчанням).
+Структуровані логи включають `request_id`, `http_method`, `http_route`,
+`http_status`, `duration_ms`, а також `trace_id`/`span_id`, якщо активовано
+OpenTelemetry трейсер.
+
 Приклад запиту з заголовком `X-API-Key`:
 
 ```bash
@@ -115,6 +122,21 @@ cogctl dotv 1,2,3 4,5,6
 # Розв'язання системи 2x2
 cogctl solve2x2 1 2 3 4 5 6
 # -> {"x": -4.0, "y": 4.5}
+```
+
+## Observability / Спостережуваність
+
+- Прометеєві метрики доступні на [`/metrics`](http://localhost:8000/metrics).
+- Middleware `ObservabilityMiddleware` забезпечує структуровані JSON-логи з
+  полями `request_id`, `http_status`, `duration_ms`, `client_ip` та
+  `trace_id`/`span_id` (коли активовано OpenTelemetry).
+- Встановіть `OTEL_EXPORTER_OTLP_ENDPOINT`, щоб надсилати трейси до OTLP
+  колектора (Jaeger, Tempo, New Relic тощо).
+
+Приклад запису логів:
+
+```json
+{"timestamp": "2025-09-12T10:15:33.102000+00:00", "level": "INFO", "logger": "cognitive_core.utils.telemetry", "message": "request.completed", "module": "telemetry", "function": "dispatch", "line": 198, "request_id": "9f6d4b1e8e7c4a7d9df2f1a4b9d7c1ad", "http_method": "GET", "http_route": "/api/health", "http_status": "200", "duration_ms": 4.12}
 ```
 
 ## Тестування

@@ -3,18 +3,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from ..config import settings
-from ..utils.telemetry import setup_telemetry
+from ..utils.logging import setup_logging
+from ..utils.telemetry import ObservabilityMiddleware, setup_telemetry
 from .auth import verify_api_key
 from .rate_limit import RateLimitMiddleware
 from .security import SecureHeadersMiddleware
+
 try:  # pragma: no cover - allow running without prometheus-client installed
     from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 except Exception:  # pragma: no cover - fallback
     CONTENT_TYPE_LATEST = "text/plain"
+
     def generate_latest() -> bytes:  # type: ignore
         return b""
+
+
 from .routers import events, health, math, pipelines
 
+setup_logging(settings.log_level)
 setup_telemetry(settings.app_name)
 app = FastAPI(title=settings.app_name, dependencies=[Depends(verify_api_key)])
 app.add_middleware(
@@ -28,6 +34,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(RateLimitMiddleware)
+app.add_middleware(ObservabilityMiddleware)
 # Register application routers
 app.include_router(health.router, prefix=settings.api_prefix, tags=["health"])
 app.include_router(math.router, prefix=settings.api_prefix, tags=["math"])
