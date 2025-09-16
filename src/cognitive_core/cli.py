@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import subprocess
@@ -43,31 +42,11 @@ def _install_allowlisted_plugin(module: str) -> None:
 
     from .plugins import REGISTRY
     from .plugins.plugin_loader import (
-        ALLOWED_PLUGINS,
-        PluginSpec,
         PluginVerificationError,
-        load_plugins,
+        load_plugin_module,
     )
 
-    spec: PluginSpec | None = ALLOWED_PLUGINS.get(module)
-    if spec is None:
-        raise PluginVerificationError(
-            f"Plugin module '{module}' is not in the allowlist and cannot be installed."
-        )
-
-    plugin_root = Path(__file__).resolve().parent / "plugins"
-    module_path = plugin_root.joinpath(*module.split(".")).with_suffix(".py")
-    if not module_path.exists():
-        raise ModuleNotFoundError(f"Plugin module '{module}' not found at {module_path}.")
-
-    digest = hashlib.sha256(module_path.read_bytes()).hexdigest()
-    if digest != spec.sha256:
-        raise PluginVerificationError(
-            "Plugin hash mismatch for '%s': expected %s but got %s"
-            % (module, spec.sha256, digest)
-        )
-
-    load_plugins()
+    spec = load_plugin_module(module)
 
     if spec.marker is not None and spec.marker not in REGISTRY:
         raise PluginVerificationError(
