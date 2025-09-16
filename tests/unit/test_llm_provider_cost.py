@@ -43,3 +43,13 @@ def test_openai_adapter_rejects_unapproved_api_base(monkeypatch):
 
     with pytest.raises(RuntimeError):
         adapter.run("hello")
+
+
+def test_openai_adapter_rejects_non_https_api_base(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("OPENAI_API_BASE", "http://api.openai.com/v1")
+
+    adapter = OpenAIAdapter()
+
+    with pytest.raises(RuntimeError):
+        adapter.run("hello")
