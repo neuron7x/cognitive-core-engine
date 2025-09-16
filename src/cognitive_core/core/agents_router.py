@@ -41,6 +41,9 @@ class AgentsRouter:
         if not path.is_relative_to(self.config_dir):
             raise ValueError(f"Invalid role name: {name}")
 
+        if not path.is_file():
+            raise ValueError(f"Role definition '{name}' not found in agents configuration directory.")
+
         with path.open() as f:
             if yaml:
                 data = yaml.safe_load(f) or {}
