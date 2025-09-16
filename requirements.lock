@@ -1,7 +1,7 @@
 # requirements.lock placeholder
 #
 # This repository is maintained in an offline environment, so generating a
-# fully hashed lock file with `pip-compile --generate-hashes` is not possible
+# fully hashed lock file with `pip-compile requirements.txt --generate-hashes`
 # here. Follow the instructions in docs/operations.md to regenerate this file
 # with the correct hashes once network access is available.
 #
