@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from urllib.parse import urlparse
 
 from .costs import compute_cost_from_usage
 
@@ -25,6 +26,8 @@ class MockProvider(LLMProvider):
 class OpenAIAdapter(LLMProvider):
     name = "openai"
 
+    _ALLOWED_API_HOSTS = {"api.openai.com"}
+
     def __init__(self, key: str | None = None, model: str = "gpt-4o-mini"):
         self.key = key or os.environ.get("OPENAI_API_KEY")
         self.model = model
@@ -43,6 +46,13 @@ class OpenAIAdapter(LLMProvider):
             "Content-Type": "application/json",
         }
         base = os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+        parsed = urlparse(base)
+        if parsed.scheme != "https" or not parsed.netloc or not parsed.hostname:
+            raise RuntimeError("OPENAI_API_BASE must be an https URL with a valid hostname.")
+        if parsed.hostname not in self._ALLOWED_API_HOSTS:
+            raise RuntimeError(
+                "OPENAI_API_BASE hostname is not allowed."
+            )
         url = f"{base}/chat/completions"
 
         if requests is None:
