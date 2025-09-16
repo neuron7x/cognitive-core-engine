@@ -14,5 +14,5 @@ def test_dot_len_mismatch():
 
 def test_solve2x2():
     x, y = solve_linear_2x2(1, 2, 3, 4, 5, 6)
-    assert round(x, 6) == -1.0
-    assert round(y, 6) == 3.0
+    assert round(x, 6) == -4.0
+    assert round(y, 6) == 4.5

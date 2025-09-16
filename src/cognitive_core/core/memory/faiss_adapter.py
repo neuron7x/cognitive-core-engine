@@ -4,14 +4,20 @@ from __future__ import annotations
 
 from collections import Counter
 import math
+import re
 from typing import List, Tuple
 
 from .base import MemoryAdapter
 
 
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+
 def _embed(text: str) -> Counter[str]:
     """Create a naive bag-of-words embedding."""
-    return Counter(text.lower().split())
+
+    tokens = _TOKEN_RE.findall(text.lower())
+    return Counter(tokens)
 
 
 def _cosine(a: Counter[str], b: Counter[str]) -> float:
