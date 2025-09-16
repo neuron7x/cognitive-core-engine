@@ -8,6 +8,8 @@ from pathlib import Path
 
 PLUGIN_MARKER = "__plugin__"
 _PLUGIN_MARKER_BYTES = PLUGIN_MARKER.encode("utf-8")
+_PLUGINS_ROOT = Path(__file__).resolve().parent
+_PLUGINS_PACKAGE = __name__.rsplit(".", 1)[0]
 
 
 @dataclass(frozen=True)
@@ -35,52 +37,108 @@ ALLOWED_PLUGINS: dict[str, PluginSpec] = {
 }
 
 
+def _normalise_spec_module(module: str, spec: PluginSpec) -> tuple[str, str]:
+    """Return the relative and fully qualified module names for ``spec``."""
+
+    relative = spec.module
+    if relative.startswith(f"{_PLUGINS_PACKAGE}."):
+        relative = relative[len(_PLUGINS_PACKAGE) + 1 :]
+
+    if relative != module:
+        raise PluginVerificationError(
+            f"Allowlist entry for '{module}' references mismatched module '{spec.module}'."
+        )
+
+    full = f"{_PLUGINS_PACKAGE}.{relative}"
+    return relative, full
+
+
+def _resolve_plugin_path(module: str) -> Path:
+    """Return the absolute path to a plugin module inside the plugins package."""
+
+    parts = module.split(".")
+    if any(part in {"", ".", ".."} or not part.isidentifier() for part in parts):
+        raise PluginVerificationError(
+            f"Invalid module path '{module}' in plugin allowlist."
+        )
+
+    candidate = _PLUGINS_ROOT.joinpath(*parts)
+    if candidate.is_dir():
+        module_path = candidate / "__init__.py"
+    else:
+        module_path = candidate.with_suffix(".py")
+
+    if not module_path.exists():
+        raise ModuleNotFoundError(
+            f"Plugin module '{module}' not found at {module_path}."
+        )
+
+    resolved = module_path.resolve(strict=True)
+    try:
+        resolved.relative_to(_PLUGINS_ROOT)
+    except ValueError as exc:
+        raise PluginVerificationError(
+            f"Resolved path for plugin '{module}' escapes the plugins directory."
+        ) from exc
+
+    if not resolved.is_file():
+        raise PluginVerificationError(
+            f"Plugin '{module}' resolved path {resolved} is not a file."
+        )
+
+    return resolved
+
+
+def _load_plugin_from_spec(module: str, spec: PluginSpec) -> None:
+    """Load a single plugin described by ``spec``."""
+
+    relative, full = _normalise_spec_module(module, spec)
+    module_path = _resolve_plugin_path(relative)
+
+    contents = module_path.read_bytes()
+    if _PLUGIN_MARKER_BYTES not in contents:
+        raise PluginVerificationError(
+            f"Allowlisted plugin '{module}' is missing the '{PLUGIN_MARKER}' marker."
+        )
+
+    digest = hashlib.sha256(contents).hexdigest()
+    if digest != spec.sha256:
+        raise PluginVerificationError(
+            "Plugin hash mismatch for '%s': expected %s but got %s"
+            % (module, spec.sha256, digest)
+        )
+
+    importlib.invalidate_caches()
+    module_obj = importlib.import_module(full)
+
+    if not hasattr(module_obj, PLUGIN_MARKER):
+        raise PluginVerificationError(
+            f"Plugin '{module}' is missing the required '{PLUGIN_MARKER}' marker."
+        )
+
+    marker_value = getattr(module_obj, PLUGIN_MARKER)
+    if spec.marker is not None and marker_value != spec.marker:
+        raise PluginVerificationError(
+            "Plugin marker mismatch for '%s': expected %s but got %s"
+            % (module, spec.marker, marker_value)
+        )
+
+
+def load_plugin_module(module: str) -> PluginSpec:
+    """Load a single allowlisted plugin module after integrity checks."""
+
+    spec = ALLOWED_PLUGINS.get(module)
+    if spec is None:
+        raise PluginVerificationError(
+            f"Plugin module '{module}' is not in the allowlist and cannot be installed."
+        )
+
+    _load_plugin_from_spec(module, spec)
+    return spec
+
+
 def load_plugins() -> None:
-    """Scan the plugins package and import allowed modules only.
+    """Import all allowlisted plugins after verifying their integrity."""
 
-    Importing modules causes them to register themselves with the plugin
-    registry via the ``register`` function. Only modules present in
-    :data:`ALLOWED_PLUGINS` with matching hashes and plugin markers are loaded.
-    """
-
-    base_dir = Path(__file__).resolve().parent
-    package = __name__.rsplit(".", 1)[0]
-
-    for path in base_dir.rglob("*.py"):
-        if path.name in {"__init__.py", "plugin_loader.py"}:
-            continue
-
-        rel_parts = path.relative_to(base_dir).with_suffix("").parts
-        module_key = ".".join(rel_parts)
-        contents = path.read_bytes()
-        has_marker = _PLUGIN_MARKER_BYTES in contents
-
-        spec = ALLOWED_PLUGINS.get(module_key)
-        if not spec:
-            continue
-        if not has_marker:
-            raise PluginVerificationError(
-                f"Allowlisted plugin '{module_key}' is missing the '{PLUGIN_MARKER}' marker."
-            )
-
-        digest = hashlib.sha256(contents).hexdigest()
-        if digest != spec.sha256:
-            raise PluginVerificationError(
-                "Plugin hash mismatch for '%s': expected %s but got %s"
-                % (module_key, spec.sha256, digest)
-            )
-
-        module_name = ".".join((package, *rel_parts))
-        module = importlib.import_module(module_name)
-
-        if not hasattr(module, PLUGIN_MARKER):
-            raise PluginVerificationError(
-                f"Plugin '{module_key}' is missing the required '{PLUGIN_MARKER}' marker."
-            )
-
-        marker_value = getattr(module, PLUGIN_MARKER)
-        if spec.marker is not None and marker_value != spec.marker:
-            raise PluginVerificationError(
-                "Plugin marker mismatch for '%s': expected %s but got %s"
-                % (module_key, spec.marker, marker_value)
-            )
+    for module, spec in ALLOWED_PLUGINS.items():
+        _load_plugin_from_spec(module, spec)
