@@ -27,6 +27,9 @@ app.add_middleware(
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     SecureHeadersMiddleware,
+    referrer_policy=settings.security_referrer_policy,
+    permissions_policy=settings.security_permissions_policy,
+    content_security_policy=settings.security_content_security_policy,
 )
 # Register application routers
 app.include_router(health.router, prefix=settings.api_prefix, tags=["health"])

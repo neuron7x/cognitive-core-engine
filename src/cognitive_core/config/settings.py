@@ -33,6 +33,18 @@ class Settings(BaseSettings):
         default_factory=list,
         description="List of allowed CORS origins for the public API.",
     )
+    security_referrer_policy: str = Field(
+        default="strict-origin-when-cross-origin",
+        description="Value for the Referrer-Policy header applied to all responses.",
+    )
+    security_permissions_policy: str = Field(
+        default="interest-cohort=()",
+        description="Value for the Permissions-Policy header applied to all responses.",
+    )
+    security_content_security_policy: str | None = Field(
+        default="default-src 'self'",
+        description="Value for the Content-Security-Policy header applied to all responses.",
+    )
 
     @field_validator("allowed_origins", mode="before")
     @classmethod
