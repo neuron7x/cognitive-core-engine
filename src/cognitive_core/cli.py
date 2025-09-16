@@ -9,7 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .core.math_utils import dot, solve_2x2
+from .app.services import dot as dot_service
+from .core.math_utils import solve_2x2
 
 
 def _run_alembic(*args: str) -> int:
@@ -96,8 +97,12 @@ def handle_args(args: argparse.Namespace) -> int:
     if args.cmd == "dotv":
         a = [float(x) for x in args.a.split(",") if x]
         b = [float(x) for x in args.b.split(",") if x]
-        n = min(len(a), len(b))
-        print(json.dumps({"dot": dot(a[:n], b[:n])}))
+        try:
+            result = dot_service(a, b)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        print(json.dumps({"dot": result}))
         return 0
 
     if args.cmd == "solve2x2":
