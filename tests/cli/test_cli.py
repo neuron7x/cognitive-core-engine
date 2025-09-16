@@ -27,3 +27,13 @@ def test_cli_dotv():
             assert '"dot": 32.0' in out
             return
     pytest.skip("CLI dotv not available")
+
+
+@pytest.mark.integration
+def test_cli_rejects_unapproved_plugin_install():
+    for exe in ("cogctl", "python -m cognitive_core.cli"):
+        rc, _, err = _run(f"{exe} plugin install totally.forbidden")
+        if rc != 0 and err:
+            assert "not in the allowlist" in err
+            return
+    pytest.skip("CLI plugin install not available")
