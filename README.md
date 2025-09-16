@@ -58,6 +58,15 @@ python tools/gen_assets.py
 - `media/api-demo.gif`
 - `media/cli-demo.gif`
 
+## Docker
+
+```bash
+docker build -t cognitive-core:local .
+docker run --rm -p 8000:8000 cognitive-core:local
+```
+
+Контейнер збирається з непривілейованим користувачем `appuser` (UID/GID 1000). Під час збірки Dockerfile встановлює права доступу до ключових директорій (`/app/bin`, `/app/tools` та ін.) і позначає службові скрипти як виконувані. Якщо монтуєте локальний каталог у `/app`, переконайтеся, що права доступу сумісні з цим користувачем або відкоригуйте їх заздалегідь.
+
 ## API
 Докладніше див. [docs/api.md](docs/api.md).
 

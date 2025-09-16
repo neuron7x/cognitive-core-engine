@@ -29,7 +29,7 @@ Steps:
     docker compose logs -f api
   ```
 
-> **Note:** The Docker image runs as the unprivileged `appuser` account. If you override the compose configuration to mount a local path into `/app`, ensure the mounted directory grants read (and write, if needed) access to UID 1000 inside the container. For example, adjust permissions on the host before starting services:
+> **Note:** The Docker image runs as the unprivileged `appuser` account (UID/GID 1000). During the build the Dockerfile aligns permissions for the project directories (including `/app/bin` and `/app/tools`) and marks helper scripts as executable for this user. If you override the compose configuration to mount a local path into `/app`, ensure the mounted directory grants read (and write, if needed) access to UID 1000 inside the container. For example, adjust permissions on the host before starting services:
 > ```bash
 > sudo chown -R 1000:1000 /path/to/project
 > ```
