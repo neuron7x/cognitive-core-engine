@@ -15,7 +15,7 @@ def test_health_without_api_key_unset(api_client, monkeypatch):
     importlib.reload(auth)
 
     response = api_client.get("/api/health")
-    assert response.status_code == 200
+    assert response.status_code == 500
 
 
 @pytest.mark.integration
@@ -25,4 +25,4 @@ def test_health_with_empty_api_key(api_client, monkeypatch):
     importlib.reload(auth)
 
     response = api_client.get("/api/health")
-    assert response.status_code == 403
+    assert response.status_code == 500

@@ -1,8 +1,6 @@
 import asyncio
 import time
 
-import pytest
-
 
 def test_pipeline_executor_runs_steps():
     from cognitive_core.core.pipeline_executor import PipelineExecutor
@@ -21,11 +19,9 @@ def test_pipeline_executor_runs_steps():
     assert run.status == "completed"
     assert len(run.events) == 4
 
-
-@pytest.mark.asyncio
-async def test_execute_async_runs_steps_in_parallel_and_records_events():
+def test_execute_async_runs_steps_in_parallel_and_records_events():
     from cognitive_core.core.pipeline_executor import PipelineExecutor
-    from cognitive_core.domain.pipelines import Artifact, Pipeline
+    from cognitive_core.domain.pipelines import Artifact, Pipeline, Run
 
     async def step_one():
         await asyncio.sleep(0.2)
@@ -35,10 +31,14 @@ async def test_execute_async_runs_steps_in_parallel_and_records_events():
         await asyncio.sleep(0.2)
         return Artifact(name="b", data=2)
 
-    pipeline = Pipeline(id="p2", name="AsyncTest", steps=[step_one, step_two])
-    start = time.time()
-    run = await PipelineExecutor().execute_async(pipeline)
-    duration = time.time() - start
+    async def _run() -> tuple[float, Run]:
+        pipeline = Pipeline(id="p2", name="AsyncTest", steps=[step_one, step_two])
+        start = time.time()
+        run = await PipelineExecutor().execute_async(pipeline)
+        duration = time.time() - start
+        return duration, run
+
+    duration, run = asyncio.run(_run())
 
     assert duration < 0.35
     assert sorted(a.data for a in run.artifacts) == [1, 2]

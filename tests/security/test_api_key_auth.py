@@ -1,7 +1,11 @@
 import importlib
 
 import pytest
-from hypothesis import assume, given, strategies as st
+
+try:  # pragma: no cover - optional dependency
+    from hypothesis import assume, given, strategies as st
+except ModuleNotFoundError:  # pragma: no cover - skip if hypothesis unavailable
+    pytest.skip("hypothesis is not installed", allow_module_level=True)
 
 from cognitive_core import config
 from cognitive_core.api import auth

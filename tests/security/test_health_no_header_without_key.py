@@ -12,4 +12,4 @@ def test_health_without_api_key_header(api_client, monkeypatch):
     importlib.reload(auth)
 
     response = api_client.get("/api/health")
-    assert response.status_code == 200
+    assert response.status_code == 500

@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
 
 from ...core.agents_router import AgentsRouter
@@ -35,6 +33,10 @@ class DebateRequest(BaseModel):
     concurrent: bool = False
 
 
+RunRequest.model_rebuild()
+DebateRequest.model_rebuild()
+
+
 @router.get("/v1/pipelines/{pipeline_id}")
 @instrument_route("get_pipeline")
 def get_pipeline(pipeline_id: str):
@@ -46,7 +48,7 @@ def get_pipeline(pipeline_id: str):
 
 @router.post("/v1/pipelines/run")
 @instrument_route("run_pipeline")
-def run_pipeline(req: RunRequest):
+def run_pipeline(req: RunRequest = Body(...)):
     pipeline = PIPELINES.get(req.pipeline_id)
     if not pipeline:
         raise HTTPException(status_code=404, detail="Pipeline not found")

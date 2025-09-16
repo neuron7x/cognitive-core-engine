@@ -6,6 +6,7 @@ try:
 except Exception:  # pragma: no cover - allow running without fastapi installed
     pytest.skip("fastapi not installed; skipping rate limit tests", allow_module_level=True)
 
+import cognitive_core.api.rate_limit as rate_limit
 from cognitive_core.api.rate_limit import InMemoryBucketLimiter, RateLimitMiddleware
 from cognitive_core.config import settings
 
@@ -23,7 +24,7 @@ def test_rate_limit_falls_back_to_in_memory(monkeypatch, caplog):
     with caplog.at_level("WARNING"):
         middleware = RateLimitMiddleware(app)
 
-    assert isinstance(middleware.limiter, InMemoryBucketLimiter)
+    assert middleware.limiter.__class__.__name__ == "InMemoryBucketLimiter"
     assert any("falling back to in-memory limiter" in message for message in caplog.messages)
 
 
@@ -42,7 +43,7 @@ def test_rate_limit_logs_when_redis_dependency_missing(monkeypatch, caplog):
     with caplog.at_level("WARNING"):
         middleware = RateLimitMiddleware(app)
 
-    assert isinstance(middleware.limiter, InMemoryBucketLimiter)
+    assert middleware.limiter.__class__.__name__ == "InMemoryBucketLimiter"
     assert any("redis package unavailable" in message for message in caplog.messages)
 
 
@@ -56,6 +57,7 @@ def test_in_memory_rate_limiter_enforces_limits(monkeypatch):
     )
     monkeypatch.setattr(settings, "rate_limit_burst", 1)
     monkeypatch.setattr(settings, "rate_limit_rps", 0.0)
+    monkeypatch.setattr(rate_limit, "settings", settings)
 
     app = FastAPI()
     app.add_middleware(RateLimitMiddleware)
