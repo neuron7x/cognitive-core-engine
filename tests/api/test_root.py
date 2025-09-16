@@ -33,3 +33,8 @@ def test_security_headers_present():
     )
     assert r.headers["X-Frame-Options"] == "DENY"
     assert r.headers["X-Content-Type-Options"] == "nosniff"
+    assert (
+        r.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+    )
+    assert r.headers["Permissions-Policy"] == "interest-cohort=()"
+    assert r.headers["Content-Security-Policy"] == "default-src 'self'"
