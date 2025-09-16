@@ -1,5 +1,16 @@
-import subprocess as sp
+import subprocess
 import sys
 
-cmds = ["ruff check .", "black --check .", "isort --check-only .", "pytest -q"]
-sys.exit(sum(sp.call(c, shell=True) for c in cmds))
+COMMANDS = [
+    ["ruff", "check", "."],
+    ["black", "--check", "."],
+    ["isort", "--check-only", "."],
+    ["pytest", "-q"],
+]
+
+for command in COMMANDS:
+    result = subprocess.run(command)
+    if result.returncode != 0:
+        sys.exit(result.returncode)
+
+sys.exit(0)
