@@ -75,10 +75,7 @@ jobs:
               echo 'requirements.lock is a placeholder. Regenerate it with pip-compile before merging.' >&2
               exit 1
             fi
-            pip-compile pyproject.toml \
-              --extra api \
-              --extra test \
-              --extra dev \
+            pip-compile requirements.txt \
               --generate-hashes \
               --output-file requirements.lock.new
             if ! diff -u requirements.lock requirements.lock.new >/tmp/lock.diff; then

@@ -37,25 +37,20 @@ Steps:
 
 ## Dependency management
 
-Use [`pip-tools`](https://github.com/jazzband/pip-tools) to keep dependency pins and the lock file consistent with `pyproject.toml`.
+Use [`pip-tools`](https://github.com/jazzband/pip-tools) to keep dependency pins and the lock file consistent with `requirements.txt`.
 
-1. Edit `pyproject.toml` to add or upgrade dependencies. Prefer ranges with upper bounds so updates remain controlled.
-2. Install tooling (once per environment):
+1. Edit `pyproject.toml` to add or upgrade dependencies (and `requirements.txt` if new extras are exposed). Prefer ranges with upper bounds so updates remain controlled.
+2. Ensure you are in an environment with internet access and install the tooling (once per environment):
    ```bash
    python -m pip install --upgrade pip pip-tools
    ```
-3. Recompile the lock file with hashes for all extras that we ship:
+3. Recompile the lock file with hashes for everything listed in `requirements.txt`:
    ```bash
-   pip-compile pyproject.toml \
-     --extra api \
-     --extra test \
-     --extra dev \
-     --generate-hashes \
-     --output-file requirements.lock
+   pip-compile requirements.txt --generate-hashes --output-file requirements.lock
    ```
-4. Review the diff, run the usual test suite (`pytest`) and commit both `pyproject.toml` and `requirements.lock` together.
+4. Review the diff, run the usual test suite (`pytest`) and commit `pyproject.toml`, `requirements.txt`, and `requirements.lock` together.
 
-The CI workflow reruns `pip-compile` and fails if the generated lock file does not match the committed version, so make sure to regenerate it before opening a pull request.
+The CI workflow reruns the same `pip-compile` command and fails if the generated lock file does not match the committed version, so make sure to regenerate it before opening a pull request.
 
 ## Observability
 ```mermaid
