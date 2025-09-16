@@ -26,14 +26,36 @@ Steps:
    ```
 2. Follow logs:
    ```bash
-   docker compose logs -f api
-   ```
+    docker compose logs -f api
+  ```
 
 > **Note:** The Docker image runs as the unprivileged `appuser` account. If you override the compose configuration to mount a local path into `/app`, ensure the mounted directory grants read (and write, if needed) access to UID 1000 inside the container. For example, adjust permissions on the host before starting services:
 > ```bash
 > sudo chown -R 1000:1000 /path/to/project
 > ```
 > Alternatively, use group-based permissions so that the directory is accessible without changing ownership.
+
+## Dependency management
+
+Use [`pip-tools`](https://github.com/jazzband/pip-tools) to keep dependency pins and the lock file consistent with `pyproject.toml`.
+
+1. Edit `pyproject.toml` to add or upgrade dependencies. Prefer ranges with upper bounds so updates remain controlled.
+2. Install tooling (once per environment):
+   ```bash
+   python -m pip install --upgrade pip pip-tools
+   ```
+3. Recompile the lock file with hashes for all extras that we ship:
+   ```bash
+   pip-compile pyproject.toml \
+     --extra api \
+     --extra test \
+     --extra dev \
+     --generate-hashes \
+     --output-file requirements.lock
+   ```
+4. Review the diff, run the usual test suite (`pytest`) and commit both `pyproject.toml` and `requirements.lock` together.
+
+The CI workflow reruns `pip-compile` and fails if the generated lock file does not match the committed version, so make sure to regenerate it before opening a pull request.
 
 ## Observability
 ```mermaid
