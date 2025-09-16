@@ -64,6 +64,9 @@ def run_pipeline(req: RunRequest = Body(...)):
 @router.post("/pipelines/aots_debate")
 @instrument_route("aots_debate")
 def aots_debate(req: DebateRequest) -> DebateRound:
-    round = agents_router.run(req.prompt, req.roles, concurrent=req.concurrent)
+    try:
+        round = agents_router.run(req.prompt, req.roles, concurrent=req.concurrent)
+    except (ValueError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     record_llm_tokens("aots_debate", len(round.responses))
     return round
