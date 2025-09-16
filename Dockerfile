@@ -14,13 +14,37 @@ RUN pip install --upgrade pip \
         prometheus-client \
         structlog
 
-RUN groupadd -g 1000 appuser \
-    && useradd -m -u 1000 -g appuser appuser \
-    && chown -R appuser:appuser /app
+ARG APP_USER=appuser
+ARG APP_UID=1000
+ARG APP_GID=1000
 
-USER appuser
+RUN set -eux; \
+    groupadd --gid "${APP_GID}" "${APP_USER}"; \
+    useradd \
+        --uid "${APP_UID}" \
+        --gid "${APP_GID}" \
+        --create-home \
+        --shell /bin/bash \
+        "${APP_USER}"
 
-COPY --chown=appuser:appuser . /app
+COPY --chown=${APP_USER}:${APP_USER} . /app
+
+RUN set -eux; \
+    install -d -m 0755 \
+        /app/alembic \
+        /app/bin \
+        /app/config \
+        /app/deployment \
+        /app/docs \
+        /app/src \
+        /app/tests \
+        /app/tools; \
+    for path in /app/bin/example_run.py /app/tools/validate.py; do \
+        if [ -f "${path}" ]; then chmod +x "${path}"; fi; \
+    done; \
+    chown -R ${APP_USER}:${APP_USER} /app
+
+USER ${APP_USER}
 
 EXPOSE 8000
 CMD ["uvicorn", "cognitive_core.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
