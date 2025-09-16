@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import heapq
 import logging
 import threading
 import time
@@ -30,18 +31,45 @@ class InMemoryBucketLimiter:
     def __init__(self, capacity: int, refill_per_sec: float) -> None:
         self.capacity = float(capacity)
         self.refill_per_sec = float(refill_per_sec)
-        self._state: dict[str, tuple[float, float]] = {}
+        self._state: dict[str, tuple[float, float, float]] = {}
+        self._expirations: list[tuple[float, str]] = []
         self._lock = threading.Lock()
+
+    def _prune_expired(self, now: float) -> None:
+        if not self._expirations:
+            return
+
+        while self._expirations and self._expirations[0][0] <= now:
+            _, token = heapq.heappop(self._expirations)
+            state = self._state.get(token)
+            if not state:
+                continue
+
+            _, _, expiry = state
+            if expiry <= now:
+                self._state.pop(token, None)
 
     def allow(self, token: str, needed: float = 1.0) -> bool:
         now = time.time()
         with self._lock:
-            tokens, last_ts = self._state.get(token, (self.capacity, now))
+            self._prune_expired(now)
+
+            tokens, last_ts, _ = self._state.get(token, (self.capacity, now, now))
             tokens = min(self.capacity, tokens + (now - last_ts) * self.refill_per_sec)
             allowed = tokens >= needed
             if allowed:
                 tokens -= needed
-            self._state[token] = (tokens, now)
+            if tokens >= self.capacity:
+                self._state.pop(token, None)
+            else:
+                if self.refill_per_sec > 0:
+                    expiry = now + (self.capacity - tokens) / self.refill_per_sec
+                    self._state[token] = (tokens, now, expiry)
+                    heapq.heappush(self._expirations, (expiry, token))
+                else:
+                    # When no refill is configured we cannot compute a meaningful
+                    # expiry, so keep the latest state without scheduling cleanup.
+                    self._state[token] = (tokens, now, float("inf"))
             return allowed
 
 
