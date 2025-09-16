@@ -27,6 +27,9 @@ def test_health_endpoint():
 
 def test_security_headers_present():
     r = _authorized_get("/")
-    assert r.headers.get("strict-transport-security") == "max-age=63072000; includeSubDomains; preload"
-    assert r.headers.get("x-frame-options") == "DENY"
-    assert r.headers.get("x-content-type-options") == "nosniff"
+    assert (
+        r.headers["Strict-Transport-Security"]
+        == "max-age=63072000; includeSubDomains; preload"
+    )
+    assert r.headers["X-Frame-Options"] == "DENY"
+    assert r.headers["X-Content-Type-Options"] == "nosniff"
