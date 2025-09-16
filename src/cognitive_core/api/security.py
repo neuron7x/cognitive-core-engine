@@ -18,14 +18,20 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
         self,
         app: ASGIApp,
         *,
-        strict_transport_security: str = "max-age=63072000; includeSubDomains; preload",
-        x_frame_options: str = "DENY",
-        x_content_type_options: str = "nosniff",
+        strict_transport_security: str | None = "max-age=63072000; includeSubDomains; preload",
+        x_frame_options: str | None = "DENY",
+        x_content_type_options: str | None = "nosniff",
+        referrer_policy: str | None = "strict-origin-when-cross-origin",
+        permissions_policy: str | None = "interest-cohort=()",
+        content_security_policy: str | None = None,
     ) -> None:
         super().__init__(app)
         self._strict_transport_security = strict_transport_security
         self._x_frame_options = x_frame_options
         self._x_content_type_options = x_content_type_options
+        self._referrer_policy = referrer_policy
+        self._permissions_policy = permissions_policy
+        self._content_security_policy = content_security_policy
 
     async def dispatch(self, request: Request, call_next: CallNext) -> Response:
         response = await call_next(request)
@@ -39,6 +45,14 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
         if self._x_content_type_options:
             response.headers.setdefault(
                 "X-Content-Type-Options", self._x_content_type_options
+            )
+        if self._referrer_policy:
+            response.headers.setdefault("Referrer-Policy", self._referrer_policy)
+        if self._permissions_policy:
+            response.headers.setdefault("Permissions-Policy", self._permissions_policy)
+        if self._content_security_policy:
+            response.headers.setdefault(
+                "Content-Security-Policy", self._content_security_policy
             )
 
         return response
