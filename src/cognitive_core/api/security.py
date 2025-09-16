@@ -7,7 +7,6 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
-
 CallNext = Callable[[Request], Awaitable[Response]]
 
 
@@ -43,16 +42,12 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
         if self._x_frame_options:
             response.headers.setdefault("X-Frame-Options", self._x_frame_options)
         if self._x_content_type_options:
-            response.headers.setdefault(
-                "X-Content-Type-Options", self._x_content_type_options
-            )
+            response.headers.setdefault("X-Content-Type-Options", self._x_content_type_options)
         if self._referrer_policy:
             response.headers.setdefault("Referrer-Policy", self._referrer_policy)
         if self._permissions_policy:
             response.headers.setdefault("Permissions-Policy", self._permissions_policy)
         if self._content_security_policy:
-            response.headers.setdefault(
-                "Content-Security-Policy", self._content_security_policy
-            )
+            response.headers.setdefault("Content-Security-Policy", self._content_security_policy)
 
         return response

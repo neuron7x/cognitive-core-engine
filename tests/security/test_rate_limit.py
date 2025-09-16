@@ -3,9 +3,8 @@ import importlib
 import pytest
 from fastapi.testclient import TestClient
 
-from cognitive_core.api import rate_limit
-from cognitive_core.api import main
 from cognitive_core import config
+from cognitive_core.api import auth, main, rate_limit
 
 
 class DummyLimiter:
@@ -22,13 +21,21 @@ class DummyLimiter:
 
 @pytest.mark.integration
 def test_rate_limit_blocks_after_burst(monkeypatch):
+    monkeypatch.setenv("COG_API_KEY", "rate-limit-key")
     monkeypatch.setenv("COG_RATE_LIMIT_RPS", "0")
     monkeypatch.setenv("COG_RATE_LIMIT_BURST", "2")
     importlib.reload(config)
+    monkeypatch.setattr(
+        config,
+        "settings",
+        config.Settings(api_key="rate-limit-key", rate_limit_rps=0.0, rate_limit_burst=2),
+    )
+    monkeypatch.setattr(auth, "settings", config.settings)
     importlib.reload(rate_limit)
     monkeypatch.setattr(rate_limit, "RedisBucketLimiter", DummyLimiter)
     importlib.reload(main)
     client = TestClient(main.app)
-    assert client.get("/api/health").status_code == 200
-    assert client.get("/api/health").status_code == 200
-    assert client.get("/api/health").status_code == 429
+    headers = {"X-API-Key": "rate-limit-key"}
+    assert client.get("/api/health", headers=headers).status_code == 200
+    assert client.get("/api/health", headers=headers).status_code == 200
+    assert client.get("/api/health", headers=headers).status_code == 429

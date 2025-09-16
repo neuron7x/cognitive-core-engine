@@ -1,7 +1,6 @@
 from ...app.services import dot
 from .. import PluginMetadata, register
 
-
 __plugin__ = "math.dot"
 
 

@@ -64,9 +64,7 @@ class EPaUp:
 
     def with_theory_of_mind(self, audience: str) -> str:
         base = self.build()
-        tom_line = (
-            f"Consider what {audience} might believe, know, or intend when responding."
-        )
+        tom_line = f"Consider what {audience} might believe, know, or intend when responding."
         return f"{base}\n{tom_line}"
 
 

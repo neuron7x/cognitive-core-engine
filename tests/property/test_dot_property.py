@@ -1,6 +1,13 @@
-from hypothesis import given, strategies as st
+import importlib
 
-from cognitive_core.core.math_utils import dot
+import pytest
+
+hypothesis = pytest.importorskip("hypothesis")
+given = hypothesis.given
+st = hypothesis.strategies
+
+math_utils = importlib.import_module("cognitive_core.core.math_utils")
+dot = math_utils.dot
 
 
 @given(

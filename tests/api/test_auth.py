@@ -6,10 +6,9 @@ import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
+from cognitive_core import config
 from cognitive_core.api import auth
 from cognitive_core.api.main import app
-from cognitive_core import config
-
 
 client = TestClient(app)
 

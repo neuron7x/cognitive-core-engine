@@ -14,7 +14,6 @@ from cognitive_core.plugins.plugin_loader import (
     load_plugins,
 )
 
-
 PLUGINS_DIR = Path(__file__).resolve().parents[1] / "src" / "cognitive_core" / "plugins"
 PLUGIN_FILE = PLUGINS_DIR / "example" / "math_plugin.py"
 
@@ -75,7 +74,7 @@ def test_load_plugins_detects_hash_mismatch(monkeypatch):
 def test_load_plugins_detects_missing_marker(monkeypatch):
     spec = ALLOWED_PLUGINS["example.math_plugin"]
     original_source = PLUGIN_FILE.read_text()
-    marker_line = "__plugin__ = \"math.dot\"\n\n"
+    marker_line = '__plugin__ = "math.dot"\n\n'
     if marker_line not in original_source:
         pytest.fail("Expected plugin marker declaration to be present")
     modified_source = original_source.replace(marker_line, "")

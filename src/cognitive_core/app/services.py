@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from cognitive_core.core.math_utils import dot as _dot, solve_2x2 as _solve_2x2
+from cognitive_core.core.math_utils import dot as _dot
+from cognitive_core.core.math_utils import solve_2x2 as _solve_2x2
 
 
 def dot(a: Iterable[float], b: Iterable[float]) -> float:

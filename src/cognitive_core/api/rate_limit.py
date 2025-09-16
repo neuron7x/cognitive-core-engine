@@ -74,10 +74,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             self.limiter = InMemoryBucketLimiter(**limiter_kwargs)
 
     async def dispatch(self, request: Request, call_next):
-        if (
-            self.limiter
-            and request.url.path.startswith(settings.api_prefix)
-        ):
+        if self.limiter and request.url.path.startswith(settings.api_prefix):
             token = request.headers.get("X-API-Key")
             if not token and request.client:
                 token = request.client.host

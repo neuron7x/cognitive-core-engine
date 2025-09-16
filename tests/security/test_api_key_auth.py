@@ -1,10 +1,14 @@
 import importlib
 
 import pytest
-from hypothesis import assume, given, strategies as st
 
 from cognitive_core import config
 from cognitive_core.api import auth
+
+hypothesis = pytest.importorskip("hypothesis")
+assume = hypothesis.assume
+given = hypothesis.given
+st = hypothesis.strategies
 
 
 @pytest.mark.integration

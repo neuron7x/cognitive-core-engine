@@ -6,6 +6,7 @@ from functools import wraps
 try:
     from prometheus_client import Counter, Histogram
 except Exception:  # pragma: no cover - fallback when library missing
+
     class _Metric:
         def labels(self, **_kwargs):
             return self
@@ -21,6 +22,7 @@ except Exception:  # pragma: no cover - fallback when library missing
 
     def Counter(*_args, **_kwargs):  # type: ignore[override]
         return _Metric()
+
 
 try:
     from opentelemetry import trace
@@ -47,12 +49,16 @@ def setup_telemetry(service_name: str = "cognitive-core-engine") -> None:
 
 def instrument_route(route_name: str):
     """Decorator to time requests and create trace spans."""
+
     def decorator(func):
         if asyncio.iscoroutinefunction(func):
+
             @wraps(func)
             async def async_wrapper(*args, **kwargs):
                 tracer = trace.get_tracer(__name__) if trace else None
-                span_cm = tracer.start_as_current_span(route_name) if tracer else contextlib.nullcontext()
+                span_cm = (
+                    tracer.start_as_current_span(route_name) if tracer else contextlib.nullcontext()
+                )
                 with span_cm:
                     start = time.perf_counter()
                     result = await func(*args, **kwargs)
@@ -61,10 +67,13 @@ def instrument_route(route_name: str):
 
             return async_wrapper
         else:
+
             @wraps(func)
             def sync_wrapper(*args, **kwargs):
                 tracer = trace.get_tracer(__name__) if trace else None
-                span_cm = tracer.start_as_current_span(route_name) if tracer else contextlib.nullcontext()
+                span_cm = (
+                    tracer.start_as_current_span(route_name) if tracer else contextlib.nullcontext()
+                )
                 with span_cm:
                     start = time.perf_counter()
                     result = func(*args, **kwargs)

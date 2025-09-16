@@ -41,13 +41,9 @@ class OpenAIAdapter(LLMProvider):
         hostname = parsed.hostname.lower()
         allowed_hosts = {host.lower() for host in cls._ALLOWED_API_HOSTS}
         if hostname not in allowed_hosts:
-            raise RuntimeError(
-                "OPENAI_API_BASE hostname is not allowed."
-            )
+            raise RuntimeError("OPENAI_API_BASE hostname is not allowed.")
 
-        sanitized = urlunparse(
-            ("https", parsed.netloc, parsed.path or "", "", "", "")
-        ).rstrip("/")
+        sanitized = urlunparse(("https", parsed.netloc, parsed.path or "", "", "", "")).rstrip("/")
 
         return sanitized or f"https://{parsed.netloc}"
 

@@ -1,7 +1,14 @@
-from hypothesis import assume, given, strategies as st
+import importlib
+
 import pytest
 
-from cognitive_core.core.math_utils import solve_2x2
+hypothesis = pytest.importorskip("hypothesis")
+assume = hypothesis.assume
+given = hypothesis.given
+st = hypothesis.strategies
+
+math_utils = importlib.import_module("cognitive_core.core.math_utils")
+solve_2x2 = math_utils.solve_2x2
 
 
 @given(

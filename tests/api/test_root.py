@@ -27,14 +27,9 @@ def test_health_endpoint():
 
 def test_security_headers_present():
     r = _authorized_get("/")
-    assert (
-        r.headers["Strict-Transport-Security"]
-        == "max-age=63072000; includeSubDomains; preload"
-    )
+    assert r.headers["Strict-Transport-Security"] == "max-age=63072000; includeSubDomains; preload"
     assert r.headers["X-Frame-Options"] == "DENY"
     assert r.headers["X-Content-Type-Options"] == "nosniff"
-    assert (
-        r.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
-    )
+    assert r.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
     assert r.headers["Permissions-Policy"] == "interest-cohort=()"
     assert r.headers["Content-Security-Policy"] == "default-src 'self'"

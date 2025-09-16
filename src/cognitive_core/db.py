@@ -3,7 +3,6 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import declarative_base, relationship
 
-
 Base = declarative_base()
 
 
@@ -60,4 +59,3 @@ class Artifact(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     run = relationship("Run", back_populates="artifacts")
-

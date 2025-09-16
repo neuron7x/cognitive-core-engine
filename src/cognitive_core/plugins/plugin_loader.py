@@ -5,7 +5,6 @@ import importlib
 from dataclasses import dataclass
 from pathlib import Path
 
-
 PLUGIN_MARKER = "__plugin__"
 _PLUGIN_MARKER_BYTES = PLUGIN_MARKER.encode("utf-8")
 _PLUGINS_ROOT = Path(__file__).resolve().parent
@@ -31,7 +30,7 @@ class PluginVerificationError(RuntimeError):
 ALLOWED_PLUGINS: dict[str, PluginSpec] = {
     "example.math_plugin": PluginSpec(
         module="example.math_plugin",
-        sha256="2ead25265c1b1e12488b6350293b00d33c896ead30df01f7b9bf66707c90ec63",
+        sha256="2d6b8a8f9b584fb733da754a48c8a5e7cc941135a4ddde9519dfc76437a80d74",
         marker="math.dot",
     )
 }
@@ -58,9 +57,7 @@ def _resolve_plugin_path(module: str) -> Path:
 
     parts = module.split(".")
     if any(part in {"", ".", ".."} or not part.isidentifier() for part in parts):
-        raise PluginVerificationError(
-            f"Invalid module path '{module}' in plugin allowlist."
-        )
+        raise PluginVerificationError(f"Invalid module path '{module}' in plugin allowlist.")
 
     candidate = _PLUGINS_ROOT.joinpath(*parts)
     if candidate.is_dir():
@@ -69,9 +66,7 @@ def _resolve_plugin_path(module: str) -> Path:
         module_path = candidate.with_suffix(".py")
 
     if not module_path.exists():
-        raise ModuleNotFoundError(
-            f"Plugin module '{module}' not found at {module_path}."
-        )
+        raise ModuleNotFoundError(f"Plugin module '{module}' not found at {module_path}.")
 
     resolved = module_path.resolve(strict=True)
     try:
@@ -82,9 +77,7 @@ def _resolve_plugin_path(module: str) -> Path:
         ) from exc
 
     if not resolved.is_file():
-        raise PluginVerificationError(
-            f"Plugin '{module}' resolved path {resolved} is not a file."
-        )
+        raise PluginVerificationError(f"Plugin '{module}' resolved path {resolved} is not a file.")
 
     return resolved
 
@@ -104,8 +97,7 @@ def _load_plugin_from_spec(module: str, spec: PluginSpec) -> None:
     digest = hashlib.sha256(contents).hexdigest()
     if digest != spec.sha256:
         raise PluginVerificationError(
-            "Plugin hash mismatch for '%s': expected %s but got %s"
-            % (module, spec.sha256, digest)
+            "Plugin hash mismatch for '%s': expected %s but got %s" % (module, spec.sha256, digest)
         )
 
     importlib.invalidate_caches()

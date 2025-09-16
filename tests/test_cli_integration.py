@@ -36,4 +36,3 @@ def test_cli_pipeline_run():
             assert "demo" in out
             return
     pytest.skip("CLI not available")
-

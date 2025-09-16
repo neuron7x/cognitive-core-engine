@@ -6,14 +6,17 @@ from ..config import settings
 from ..utils.telemetry import setup_telemetry
 from .auth import verify_api_key
 from .rate_limit import RateLimitMiddleware
+from .routers import events, health, math, pipelines
 from .security import SecureHeadersMiddleware
+
 try:  # pragma: no cover - allow running without prometheus-client installed
     from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 except Exception:  # pragma: no cover - fallback
     CONTENT_TYPE_LATEST = "text/plain"
+
     def generate_latest() -> bytes:  # type: ignore
         return b""
-from .routers import events, health, math, pipelines
+
 
 setup_telemetry(settings.app_name)
 app = FastAPI(title=settings.app_name, dependencies=[Depends(verify_api_key)])

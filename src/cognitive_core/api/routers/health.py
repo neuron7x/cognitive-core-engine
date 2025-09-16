@@ -4,9 +4,8 @@ from importlib.metadata import PackageNotFoundError, version
 
 from fastapi import APIRouter
 
-from ...utils.telemetry import instrument_route
-
 from ...config import settings
+from ...utils.telemetry import instrument_route
 
 router = APIRouter()
 
