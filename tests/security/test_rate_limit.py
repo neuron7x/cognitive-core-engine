@@ -40,3 +40,22 @@ def test_rate_limit_blocks_after_burst(monkeypatch):
     assert client.get("/api/health", headers=headers).status_code == 200
     assert client.get("/api/health", headers=headers).status_code == 200
     assert client.get("/api/health", headers=headers).status_code == 429
+
+
+def test_in_memory_limiter_prunes_expired_tokens(monkeypatch):
+    current_time = 0.0
+    monkeypatch.setattr(rate_limit.time, "time", lambda: current_time)
+
+    limiter = rate_limit.InMemoryBucketLimiter(capacity=3, refill_per_sec=1.0)
+
+    tokens = [f"token-{idx}" for idx in range(5)]
+    for token in tokens:
+        assert limiter.allow(token)
+
+    assert len(limiter._state) == len(tokens)
+
+    current_time += 10.0
+    limiter.allow("prune-only", needed=0)
+
+    assert limiter._state == {}
+    assert not limiter._expirations
