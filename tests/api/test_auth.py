@@ -61,3 +61,15 @@ def test_verify_api_key_rejects_spoofed_value(monkeypatch):
         asyncio.run(auth.verify_api_key("spoofed"))
 
     assert exc.value.status_code == 403
+
+
+def test_verify_api_key_rejects_missing_value(monkeypatch):
+    """Simulate tampering by stripping the API key header entirely."""
+
+    monkeypatch.setenv("COG_API_KEY", "secret")
+    _reload()
+
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(auth.verify_api_key(None))
+
+    assert exc.value.status_code == 403
