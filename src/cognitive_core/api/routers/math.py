@@ -23,9 +23,14 @@ router = APIRouter()
 
 
 @router.post("/dot")
+@router.post("/math/dot")
 @instrument_route("dot")
 def dot_endpoint(req: DotReq):
-    return {"result": dot(req.a, req.b)}
+    try:
+        result = dot(req.a, req.b)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"result": result}
 
 
 @router.post("/solve2x2")
