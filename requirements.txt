@@ -1,1 +1,2 @@
--e .[dev]
+-r requirements.lock
+-e .[api,test,dev]
