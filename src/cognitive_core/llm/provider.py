@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from .costs import compute_cost_from_usage
 
@@ -32,6 +32,25 @@ class OpenAIAdapter(LLMProvider):
         self.key = key or os.environ.get("OPENAI_API_KEY")
         self.model = model
 
+    @classmethod
+    def _validate_and_normalize_api_base(cls, base: str) -> str:
+        parsed = urlparse(base)
+        if parsed.scheme.lower() != "https" or not parsed.netloc or not parsed.hostname:
+            raise RuntimeError("OPENAI_API_BASE must be an https URL with a valid hostname.")
+
+        hostname = parsed.hostname.lower()
+        allowed_hosts = {host.lower() for host in cls._ALLOWED_API_HOSTS}
+        if hostname not in allowed_hosts:
+            raise RuntimeError(
+                "OPENAI_API_BASE hostname is not allowed."
+            )
+
+        sanitized = urlunparse(
+            ("https", parsed.netloc, parsed.path or "", "", "", "")
+        ).rstrip("/")
+
+        return sanitized or f"https://{parsed.netloc}"
+
     def run(self, prompt: str, **kwargs) -> dict:
         # Live implementation using requests. Requires 'requests' package and network access.
         if not self.key:
@@ -45,14 +64,9 @@ class OpenAIAdapter(LLMProvider):
             "Authorization": f"Bearer {self.key}",
             "Content-Type": "application/json",
         }
-        base = os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
-        parsed = urlparse(base)
-        if parsed.scheme != "https" or not parsed.netloc or not parsed.hostname:
-            raise RuntimeError("OPENAI_API_BASE must be an https URL with a valid hostname.")
-        if parsed.hostname not in self._ALLOWED_API_HOSTS:
-            raise RuntimeError(
-                "OPENAI_API_BASE hostname is not allowed."
-            )
+        base = self._validate_and_normalize_api_base(
+            os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+        )
         url = f"{base}/chat/completions"
 
         if requests is None:
