@@ -22,6 +22,10 @@ class Settings(BaseSettings):
             "Must be set via environment configuration before exposing the service."
         ),
     )
+    log_level: str = Field(
+        default="INFO",
+        description="Log level for structured logging (e.g., DEBUG, INFO, WARNING).",
+    )
     rate_limit_rps: float = 5.0
     rate_limit_burst: int = 10
     allowed_origins: list[str] = Field(

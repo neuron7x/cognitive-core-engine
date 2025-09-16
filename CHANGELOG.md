@@ -1,3 +1,11 @@
+## [Unreleased]
+- Added structured JSON logging with OpenTelemetry correlation and configurable
+  `COG_LOG_LEVEL`.
+- Introduced unified observability middleware exposing Prometheus request metrics
+  and request-scoped logging context.
+- Documented deployment, upgrade, and incident response runbooks in
+  `docs/operations.md` and expanded README observability guidance.
+
 ## v0.1.0 — 2025-09-12
 - Unified version to v0.1.0 across code and docs.
 - Moved runtime deps into `pyproject.toml`; thinned `requirements.txt` to `-e .[dev]`.

@@ -10,7 +10,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from .config import settings
 from .core.math_utils import dot, solve_2x2
+from .utils.logging import setup_logging
 
 
 def _run_alembic(*args: str) -> int:
@@ -63,8 +65,7 @@ def _install_allowlisted_plugin(module: str) -> None:
     digest = hashlib.sha256(module_path.read_bytes()).hexdigest()
     if digest != spec.sha256:
         raise PluginVerificationError(
-            "Plugin hash mismatch for '%s': expected %s but got %s"
-            % (module, spec.sha256, digest)
+            "Plugin hash mismatch for '%s': expected %s but got %s" % (module, spec.sha256, digest)
         )
 
     load_plugins()
@@ -178,6 +179,7 @@ def handle_args(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    setup_logging(settings.log_level)
     parser = build_parser()
     args = parser.parse_args(argv)
     return handle_args(args)
@@ -185,4 +187,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
