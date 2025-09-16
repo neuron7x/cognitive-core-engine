@@ -15,3 +15,9 @@ class MathPlugin:
 
 metadata = PluginMetadata(name="math.dot", version="1.0.0", requirements=[])
 register(MathPlugin(), metadata)
+
+
+def entrypoint_factory() -> tuple[MathPlugin, PluginMetadata]:
+    """Return the allowlisted plugin instance and metadata for entry-point loading."""
+
+    return MathPlugin(), metadata

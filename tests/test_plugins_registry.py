@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import sys
+from importlib.metadata import EntryPoint
 from pathlib import Path
 
 import pytest
 
-from cognitive_core.plugins import REGISTRY, dispatch
+from cognitive_core.plugins import REGISTRY, discover, dispatch
 from cognitive_core.plugins.plugin_loader import (
     ALLOWED_PLUGINS,
     PluginSpec,
@@ -92,3 +93,43 @@ def test_load_plugins_detects_missing_marker(monkeypatch):
             load_plugins()
     finally:
         PLUGIN_FILE.write_text(original_source)
+
+
+def test_discover_allows_allowlisted_entrypoint(monkeypatch):
+    entry = EntryPoint(
+        name="math",
+        value="cognitive_core.plugins.example.math_plugin:entrypoint_factory",
+        group="cognitive_core.plugins",
+    )
+
+    class DummyEntryPoints:
+        def select(self, *, group: str):
+            assert group == "cognitive_core.plugins"
+            return [entry]
+
+    monkeypatch.setattr("cognitive_core.plugins.entry_points", lambda: DummyEntryPoints())
+
+    discover()
+
+    assert "math.dot" in REGISTRY
+    meta, plugin = REGISTRY["math.dot"]
+    assert meta.name == "math.dot"
+    assert plugin.run({"a": [1, 2], "b": [3, 4]})["result"] == 11
+
+
+def test_discover_rejects_unallowlisted_entrypoint(monkeypatch):
+    rogue = EntryPoint(
+        name="rogue",
+        value="attacker.plugin:factory",
+        group="cognitive_core.plugins",
+    )
+
+    class DummyEntryPoints:
+        def select(self, *, group: str):
+            assert group == "cognitive_core.plugins"
+            return [rogue]
+
+    monkeypatch.setattr("cognitive_core.plugins.entry_points", lambda: DummyEntryPoints())
+
+    with pytest.raises(PluginVerificationError):
+        discover()

@@ -30,7 +30,7 @@ class PluginVerificationError(RuntimeError):
 ALLOWED_PLUGINS: dict[str, PluginSpec] = {
     "example.math_plugin": PluginSpec(
         module="example.math_plugin",
-        sha256="2d6b8a8f9b584fb733da754a48c8a5e7cc941135a4ddde9519dfc76437a80d74",
+        sha256="a2f3131159f6bd0175c2af9a9e01901540d52c344b6ebaf1d9c60c1cb38367f5",
         marker="math.dot",
     )
 }
