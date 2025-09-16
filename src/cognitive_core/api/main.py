@@ -18,9 +18,6 @@ from .routers import events, health, math, pipelines
 setup_telemetry(settings.app_name)
 app = FastAPI(title=settings.app_name, dependencies=[Depends(verify_api_key)])
 app.add_middleware(
-    SecureHeadersMiddleware,
-)
-app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
     allow_credentials=True,
@@ -28,6 +25,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(RateLimitMiddleware)
+app.add_middleware(
+    SecureHeadersMiddleware,
+)
 # Register application routers
 app.include_router(health.router, prefix=settings.api_prefix, tags=["health"])
 app.include_router(math.router, prefix=settings.api_prefix, tags=["math"])
