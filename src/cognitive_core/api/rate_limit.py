@@ -14,7 +14,7 @@ from ..config import settings
 _redis_import_error: Exception | None = None
 
 try:
-    from ..rate_limiter import RedisBucketLimiter
+    from ..rate_limiter import RateLimiterUnavailableError, RedisBucketLimiter
 except Exception as exc:
     RedisBucketLimiter = None  # type: ignore[assignment]
     _redis_import_error = exc
@@ -84,6 +84,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             "capacity": settings.rate_limit_burst,
             "refill_per_sec": settings.rate_limit_rps,
         }
+        self._limiter_kwargs = limiter_kwargs
 
         if RedisBucketLimiter is None:
             reason = _redis_import_error or "redis client not available"
@@ -97,11 +98,34 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         try:
             self.limiter = RedisBucketLimiter(**limiter_kwargs)
         except Exception as exc:
+            self._swap_to_in_memory(exc)
+
+    def _swap_to_in_memory(self, reason: Exception | str | None = None) -> None:
+        if isinstance(self.limiter, InMemoryBucketLimiter):
+            return
+
+        if reason is not None:
             logger.warning(
                 "Redis rate limiter unavailable (%s); falling back to in-memory limiter.",
-                exc,
+                reason,
             )
-            self.limiter = InMemoryBucketLimiter(**limiter_kwargs)
+        else:
+            logger.warning(
+                "Redis rate limiter unavailable; falling back to in-memory limiter."
+            )
+        self.limiter = InMemoryBucketLimiter(**self._limiter_kwargs)
+
+    def _allow_or_fallback(self, token: str, needed: float = 1.0) -> bool:
+        if not self.limiter:
+            return True
+
+        try:
+            return self.limiter.allow(token, needed=needed)
+        except RateLimiterUnavailableError as exc:
+            self._swap_to_in_memory(exc)
+            if not self.limiter:
+                return True
+            return self.limiter.allow(token, needed=needed)
 
     async def dispatch(self, request: Request, call_next):
         if (
@@ -109,10 +133,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             and request.url.path.startswith(settings.api_prefix)
         ):
             client_host = request.client.host if request.client else None
-            if client_host and not self.limiter.allow(f"ip:{client_host}"):
+            if client_host and not self._allow_or_fallback(f"ip:{client_host}"):
                 return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
 
             api_key = request.headers.get("X-API-Key")
-            if api_key and not self.limiter.allow(f"key:{api_key}"):
+            if api_key and not self._allow_or_fallback(f"key:{api_key}"):
                 return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
         return await call_next(request)
