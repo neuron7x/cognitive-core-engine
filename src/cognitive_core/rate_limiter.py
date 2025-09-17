@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import time
 
@@ -7,6 +8,13 @@ try:
     import redis
 except Exception:
     redis = None
+
+logger = logging.getLogger(__name__)
+
+
+class RateLimiterUnavailableError(RuntimeError):
+    """Raised when the Redis backend cannot evaluate rate limits."""
+
 
 LUA_SCRIPT = """
 local key = KEYS[1]
@@ -65,8 +73,11 @@ class RedisBucketLimiter:
                 res = self.r.eval(self.lua, 1, key, self.capacity, self.refill_per_sec, now, needed)
             allowed = int(res[0]) == 1
             return allowed
-        except Exception:
-            return False
+        except Exception as exc:
+            logger.warning(
+                "Redis rate limiter error for token '%s': %s", token, exc, exc_info=True
+            )
+            raise RateLimiterUnavailableError("redis rate limiter unavailable") from exc
 
 
 class RedisCostTracker:

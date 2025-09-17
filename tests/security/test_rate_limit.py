@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from cognitive_core.api import auth, rate_limit
 from cognitive_core.api import main
 from cognitive_core import config
+from cognitive_core.rate_limiter import RateLimiterUnavailableError
 
 
 class DummyLimiter:
@@ -69,6 +70,40 @@ def test_rate_limit_shared_ip_budget_blocks_rotating_keys(monkeypatch):
     assert client.get("/api/health", headers={"X-API-Key": "key-1"}).status_code == 200
     assert client.get("/api/health", headers={"X-API-Key": "key-2"}).status_code == 200
     assert client.get("/api/health", headers={"X-API-Key": "key-3"}).status_code == 429
+
+
+@pytest.mark.integration
+def test_rate_limit_recovers_from_transient_redis_failure(monkeypatch):
+    monkeypatch.setenv("COG_API_KEY", "rate-limit-key")
+    monkeypatch.setenv("COG_RATE_LIMIT_RPS", "0")
+    monkeypatch.setenv("COG_RATE_LIMIT_BURST", "1")
+
+    importlib.reload(config)
+    monkeypatch.setattr(
+        config,
+        "settings",
+        config.Settings(api_key="rate-limit-key", rate_limit_rps=0.0, rate_limit_burst=1),
+    )
+    monkeypatch.setattr(auth, "settings", config.settings)
+    importlib.reload(rate_limit)
+
+    class FailingRedisLimiter:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def allow(self, token: str, needed: float = 1.0) -> bool:
+            raise RateLimiterUnavailableError("redis unavailable")
+
+    monkeypatch.setattr(rate_limit, "RedisBucketLimiter", FailingRedisLimiter)
+    importlib.reload(main)
+
+    client = TestClient(main.app)
+    headers = {"X-API-Key": "rate-limit-key"}
+
+    # First call succeeds despite redis outage, swapping the limiter to in-memory storage.
+    assert client.get("/api/health", headers=headers).status_code == 200
+    # Subsequent requests are throttled by the in-memory limiter.
+    assert client.get("/api/health", headers=headers).status_code == 429
 
 
 def test_in_memory_limiter_prunes_expired_tokens(monkeypatch):
