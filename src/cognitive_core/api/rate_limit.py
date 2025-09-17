@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 class InMemoryBucketLimiter:
     """Simple token bucket limiter stored in process memory."""
 
+    NO_REFILL_TTL = 3600.0
+
     def __init__(self, capacity: int, refill_per_sec: float) -> None:
         self.capacity = float(capacity)
         self.refill_per_sec = float(refill_per_sec)
@@ -67,9 +69,9 @@ class InMemoryBucketLimiter:
                     self._state[token] = (tokens, now, expiry)
                     heapq.heappush(self._expirations, (expiry, token))
                 else:
-                    # When no refill is configured we cannot compute a meaningful
-                    # expiry, so keep the latest state without scheduling cleanup.
-                    self._state[token] = (tokens, now, float("inf"))
+                    expiry = now + self.NO_REFILL_TTL
+                    self._state[token] = (tokens, now, expiry)
+                    heapq.heappush(self._expirations, (expiry, token))
             return allowed
 
 

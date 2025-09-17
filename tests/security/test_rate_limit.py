@@ -59,3 +59,22 @@ def test_in_memory_limiter_prunes_expired_tokens(monkeypatch):
 
     assert limiter._state == {}
     assert not limiter._expirations
+
+
+def test_in_memory_limiter_prunes_tokens_when_no_refill(monkeypatch):
+    current_time = 0.0
+    monkeypatch.setattr(rate_limit.time, "time", lambda: current_time)
+
+    limiter = rate_limit.InMemoryBucketLimiter(capacity=2, refill_per_sec=0.0)
+
+    tokens = [f"no-refill-{idx}" for idx in range(4)]
+    for token in tokens:
+        assert limiter.allow(token)
+
+    assert len(limiter._state) == len(tokens)
+
+    current_time += rate_limit.InMemoryBucketLimiter.NO_REFILL_TTL + 1.0
+    limiter.allow("prune-trigger", needed=0)
+
+    assert limiter._state == {}
+    assert not limiter._expirations
