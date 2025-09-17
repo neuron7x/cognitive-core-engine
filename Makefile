@@ -4,7 +4,10 @@
 setup:
 	@if [ -f requirements.txt ] || [ -f pyproject.toml ]; then \
 	python -m pip install -U pip; \
-	if [ -f pyproject.toml ]; then pip install -e .[dev]; elif [ -f requirements.txt ]; then pip install -r requirements.txt; fi; \
+	if [ -f pyproject.toml ]; then pip install -e ".[api,test,dev]"; \
+	elif [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; \
+	elif [ -f requirements.txt ]; then pip install -r requirements.txt; \
+	fi; \
 	fi
 	@if [ -f package.json ]; then npm install; fi
 	@if [ -f go.mod ]; then go mod download; fi
