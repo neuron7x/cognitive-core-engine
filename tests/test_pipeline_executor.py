@@ -19,6 +19,23 @@ def test_pipeline_executor_runs_steps():
     assert run.status == "completed"
     assert len(run.events) == 4
 
+
+def test_pipeline_executor_execute_awaits_async_steps():
+    from cognitive_core.core.pipeline_executor import PipelineExecutor
+    from cognitive_core.domain.pipelines import Artifact, Pipeline
+
+    async def async_step():
+        await asyncio.sleep(0)
+        return Artifact(name="async", data=42)
+
+    pipeline = Pipeline(id="p_async", name="Async", steps=[async_step])
+    run = PipelineExecutor().execute(pipeline)
+
+    assert len(run.artifacts) == 1
+    assert isinstance(run.artifacts[0], Artifact)
+    assert run.artifacts[0].data == 42
+
+
 def test_execute_async_runs_steps_in_parallel_and_records_events():
     from cognitive_core.core.pipeline_executor import PipelineExecutor
     from cognitive_core.domain.pipelines import Artifact, Pipeline, Run
