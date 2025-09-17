@@ -75,6 +75,25 @@ class InMemoryBucketLimiter:
             return allowed
 
 
+class InMemoryCostTracker:
+    """Track per-client cost totals in memory."""
+
+    def __init__(self) -> None:
+        self._totals: dict[str, float] = {}
+        self._lock = threading.Lock()
+
+    def add_cost(self, key: str, amount: float) -> None:
+        amount_f = float(amount)
+        if amount_f == 0.0:
+            return
+        with self._lock:
+            self._totals[key] = self._totals.get(key, 0.0) + amount_f
+
+    def get_cost(self, key: str) -> float:
+        with self._lock:
+            return float(self._totals.get(key, 0.0))
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Middleware enforcing simple token-bucket rate limits using Redis."""
 
