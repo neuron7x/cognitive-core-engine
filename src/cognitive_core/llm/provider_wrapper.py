@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 
-from ..api.rate_limit import InMemoryBucketLimiter
+from ..api.rate_limit import InMemoryBucketLimiter, InMemoryCostTracker
 from ..config import settings
 from ..rate_limiter import (
     RateLimiterUnavailableError,
@@ -44,7 +44,6 @@ class ProviderWrapper:
                     exc,
                 )
                 self._ensure_in_memory_limiter()
-                self.tracker = None
 
     def run(self, prompt: str, client_id: str = "default", **kwargs) -> dict:
         est_tokens = max(1, len(prompt) // 4)
@@ -81,4 +80,5 @@ class ProviderWrapper:
         if isinstance(self.limiter, InMemoryBucketLimiter):
             return
         self.limiter = InMemoryBucketLimiter(**self._limiter_kwargs)
-        self.tracker = None
+        if not isinstance(self.tracker, InMemoryCostTracker):
+            self.tracker = InMemoryCostTracker()
