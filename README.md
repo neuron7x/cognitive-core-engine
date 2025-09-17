@@ -129,6 +129,16 @@ pytest
 
 # запуск лише CLI та API тестів
 pytest tests/cli/test_cli.py tests/api/test_root.py
+
+# навантажувальне тестування Locust
+export COG_API_KEY=your_api_key
+# або передайте --api-key / змінну LOCUST_API_KEY безпосередньо до Locust
+uvicorn cognitive_core.api.main:app --host 0.0.0.0 --port 8000 &
+LOCUST_PID=$!
+locust --headless --users 5 --spawn-rate 5 --run-time 15s \
+  --host http://localhost:8000 \
+  --locustfile tests/load/locustfile.py
+kill $LOCUST_PID
 ```
 
 ## Architecture Overview / Огляд архітектури
