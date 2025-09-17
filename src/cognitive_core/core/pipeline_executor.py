@@ -18,6 +18,16 @@ class PipelineExecutor:
             step_name = getattr(step, "__name__", "step")
             run.events.append(Event(step=step_name, type="start", timestamp=time()))
             artifact = step()
+            if inspect.isawaitable(artifact):
+                try:
+                    asyncio.get_running_loop()
+                except RuntimeError:
+                    artifact = asyncio.run(artifact)
+                else:
+                    raise RuntimeError(
+                        "PipelineExecutor.execute cannot run awaitable steps while an "
+                        "event loop is running; use execute_async instead."
+                    )
             if not isinstance(artifact, Artifact):
                 artifact = Artifact(name=step_name, data=artifact)
             run.artifacts.append(artifact)
