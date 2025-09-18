@@ -73,6 +73,73 @@ def test_rate_limit_shared_ip_budget_blocks_rotating_keys(monkeypatch):
 
 
 @pytest.mark.integration
+def test_rate_limit_ignores_untrusted_forwarded_header(monkeypatch):
+    monkeypatch.setenv("COG_API_KEY", "key-1,key-2,key-3")
+    monkeypatch.setenv("COG_RATE_LIMIT_RPS", "0")
+    monkeypatch.setenv("COG_RATE_LIMIT_BURST", "2")
+
+    importlib.reload(config)
+    monkeypatch.setattr(
+        config,
+        "settings",
+        config.Settings(
+            api_key="key-1,key-2,key-3",
+            rate_limit_rps=0.0,
+            rate_limit_burst=2,
+            trust_proxy_headers=False,
+        ),
+    )
+    monkeypatch.setattr(auth, "settings", config.settings)
+    importlib.reload(rate_limit)
+    monkeypatch.setattr(rate_limit, "RedisBucketLimiter", DummyLimiter)
+    importlib.reload(main)
+
+    client = TestClient(main.app)
+
+    forwarded_ips = ["8.8.8.8", "1.1.1.1", "9.9.9.9"]
+    for idx, ip in enumerate(forwarded_ips, start=1):
+        headers = {"X-API-Key": f"key-{idx}", "X-Forwarded-For": ip}
+        response = client.get("/api/health", headers=headers)
+        if idx < 3:
+            assert response.status_code == 200
+        else:
+            assert response.status_code == 429
+
+
+@pytest.mark.integration
+def test_rate_limit_trusts_forwarded_header_for_distinct_clients(monkeypatch):
+    monkeypatch.setenv("COG_API_KEY", "key-1,key-2,key-3")
+    monkeypatch.setenv("COG_RATE_LIMIT_RPS", "0")
+    monkeypatch.setenv("COG_RATE_LIMIT_BURST", "2")
+    monkeypatch.setenv("COG_TRUST_PROXY_HEADERS", "true")
+    monkeypatch.setenv("COG_TRUSTED_PROXY_HEADER", "X-Forwarded-For")
+
+    importlib.reload(config)
+    monkeypatch.setattr(
+        config,
+        "settings",
+        config.Settings(
+            api_key="key-1,key-2,key-3",
+            rate_limit_rps=0.0,
+            rate_limit_burst=2,
+            trust_proxy_headers=True,
+            trusted_proxy_header="X-Forwarded-For",
+        ),
+    )
+    monkeypatch.setattr(auth, "settings", config.settings)
+    importlib.reload(rate_limit)
+    monkeypatch.setattr(rate_limit, "RedisBucketLimiter", DummyLimiter)
+    importlib.reload(main)
+
+    client = TestClient(main.app)
+
+    forwarded_ips = ["8.8.8.8", "1.1.1.1", "9.9.9.9"]
+    for idx, ip in enumerate(forwarded_ips, start=1):
+        headers = {"X-API-Key": f"key-{idx}", "X-Forwarded-For": ip}
+        assert client.get("/api/health", headers=headers).status_code == 200
+
+
+@pytest.mark.integration
 def test_rate_limit_recovers_from_transient_redis_failure(monkeypatch):
     monkeypatch.setenv("COG_API_KEY", "rate-limit-key")
     monkeypatch.setenv("COG_RATE_LIMIT_RPS", "0")
