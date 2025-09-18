@@ -1,5 +1,8 @@
 def test_get_pipeline(api_client):
-    assert api_client.get("/api/v1/pipelines/sample").json()["id"] == "sample"
+    resp = api_client.get("/api/v1/pipelines/sample")
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["id"] == "sample"
 
 
 def test_run_pipeline(api_client):
