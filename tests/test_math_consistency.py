@@ -9,7 +9,12 @@ from cognitive_core.app import services
 
 def _run_cli(args: str):
     for exe in ("cogctl", "python -m cognitive_core.cli"):
-        proc = subprocess.run(shlex.split(f"{exe} {args}"), capture_output=True, text=True)
+        try:
+            proc = subprocess.run(
+                shlex.split(f"{exe} {args}"), capture_output=True, text=True
+            )
+        except FileNotFoundError:
+            continue
         if proc.returncode == 0 and proc.stdout.strip():
             return json.loads(proc.stdout)
     pytest.skip("CLI not available")
