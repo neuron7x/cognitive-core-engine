@@ -7,13 +7,8 @@ from pydantic import Field, field_validator
 
 try:  # pragma: no cover - allow operation without optional dependency
     from pydantic_settings import BaseSettings, SettingsConfigDict
-except ModuleNotFoundError:  # pragma: no cover - fallback shim
-    from pydantic import BaseModel, ConfigDict
-
-    class BaseSettings(BaseModel):
-        model_config = ConfigDict()
-
-    SettingsConfigDict = ConfigDict
+except ImportError:  # pragma: no cover - fallback shim
+    from cognitive_core._compat.pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):

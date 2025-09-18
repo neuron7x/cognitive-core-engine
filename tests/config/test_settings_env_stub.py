@@ -5,6 +5,8 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
 
 def _load_module(module_name: str, file_path: Path, monkeypatch):
     spec = importlib.util.spec_from_file_location(module_name, file_path)
@@ -18,7 +20,7 @@ def _load_module(module_name: str, file_path: Path, monkeypatch):
 
 def test_settings_reads_environment_when_third_party_missing(monkeypatch):
     repo_root = Path(__file__).resolve().parents[2]
-    stub_path = repo_root / "src" / "pydantic_settings" / "__init__.py"
+    stub_path = repo_root / "src" / "cognitive_core" / "_compat" / "pydantic_settings.py"
     settings_path = repo_root / "src" / "cognitive_core" / "config" / "settings.py"
 
     stub_module = _load_module("pydantic_settings", stub_path, monkeypatch)
@@ -34,3 +36,16 @@ def test_settings_reads_environment_when_third_party_missing(monkeypatch):
 
     # Ensure the stub leaves unrelated environment variables untouched.
     assert os.environ["COG_API_KEY"] == "env-secret"
+
+
+def test_settings_prefers_installed_pydantic_settings(monkeypatch):
+    repo_root = Path(__file__).resolve().parents[2]
+    settings_path = repo_root / "src" / "cognitive_core" / "config" / "settings.py"
+
+    installed = pytest.importorskip("pydantic_settings")
+    monkeypatch.setitem(sys.modules, "pydantic_settings", installed)
+
+    settings_module = _load_module("tests.config._real_settings", settings_path, monkeypatch)
+
+    assert settings_module.BaseSettings is installed.BaseSettings
+    assert settings_module.SettingsConfigDict is installed.SettingsConfigDict
