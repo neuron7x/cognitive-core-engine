@@ -5,7 +5,10 @@ import pytest
 
 
 def _run(cmd: str):
-    proc = subprocess.run(shlex.split(cmd), capture_output=True, text=True)
+    try:
+        proc = subprocess.run(shlex.split(cmd), capture_output=True, text=True)
+    except FileNotFoundError:
+        return None, "", ""
     return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
 
 
@@ -13,6 +16,8 @@ def _run(cmd: str):
 def test_cli_ping():
     for exe in ("cogctl", "python -m cognitive_core.cli"):
         rc, out, _ = _run(f"{exe} ping")
+        if rc is None:
+            continue
         if rc == 0 and out:
             assert out.strip() == "pong"
             return
@@ -23,6 +28,8 @@ def test_cli_ping():
 def test_cli_dotv():
     for exe in ("cogctl", "python -m cognitive_core.cli"):
         rc, out, _ = _run(f"{exe} dotv 1,2,3 4,5,6")
+        if rc is None:
+            continue
         if rc == 0 and out:
             assert '"dot": 32.0' in out
             return
@@ -33,6 +40,8 @@ def test_cli_dotv():
 def test_cli_rejects_unapproved_plugin_install():
     for exe in ("cogctl", "python -m cognitive_core.cli"):
         rc, _, err = _run(f"{exe} plugin install totally.forbidden")
+        if rc is None:
+            continue
         if rc != 0 and err:
             assert "not in the allowlist" in err
             return
