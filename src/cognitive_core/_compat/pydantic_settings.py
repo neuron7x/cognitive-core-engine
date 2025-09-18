@@ -1,3 +1,5 @@
+"""Fallback implementation for :mod:`pydantic_settings`."""
+
 from __future__ import annotations
 
 import os

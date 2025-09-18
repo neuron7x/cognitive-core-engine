@@ -53,6 +53,8 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["cognitive_core*"]
+exclude = ["pydantic_settings*"]
 
 [tool.black]
 line-length = 100
