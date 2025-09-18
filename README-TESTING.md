@@ -11,6 +11,6 @@ make security
 make fmt
 ```
 
-GitHub Actions runs on every push and pull request. The pipeline auto-detects the project stack and executes linting, type checking, unit tests with coverage, and security scans. Reports (JUnit, coverage, and security) are uploaded as workflow artifacts.
+GitHub Actions runs on every push and pull request. The workflow begins with an autodetection step that enables language-specific jobs only when matching tooling is present in the repository. Depending on the detected stacks, the pipeline runs linters, type checkers, unit tests with coverage, and security scans for Python, Node, Go, Java, and Rust projects. Each job uploads its JUnit, coverage, and security reports as workflow artifacts so you can review the results in one place.
 
-Container images are built for each branch and commit and published to GHCR with tags matching the branch name and commit SHA; the default branch also receives the `latest` tag. If a Node build outputs a static site, a preview is deployed to GitHub Pages for that branch.
+When a `Dockerfile` is available, the workflow builds a multi-architecture image with Buildx and pushes it to GHCR. Images are tagged with the branch name and commit SHA; pushes to the default branch also receive the `latest` tag. For Node projects that emit a static site (`dist/` or `build/`), the workflow uploads the assets and publishes a GitHub Pages preview for that branch.
