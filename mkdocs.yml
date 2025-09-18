@@ -1,6 +1,19 @@
 site_name: cognitive-core-engine
+theme:
+  name: material
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 nav:
   - API: api.md
   - Architecture: architecture.md
   - Operations: operations.md
   - Plugins: plugins.md
+plugins:
+  - search
+  - mermaid2
+extra_javascript:
+  - javascripts/mermaid-init.js
