@@ -24,6 +24,16 @@ class Settings(BaseSettings):
     )
     rate_limit_rps: float = 5.0
     rate_limit_burst: int = 10
+    trust_proxy_headers: bool = Field(
+        default=False,
+        description=(
+            "Whether to trust proxy-provided client IP headers (such as X-Forwarded-For)."
+        ),
+    )
+    trusted_proxy_header: str = Field(
+        default="X-Forwarded-For",
+        description="Header name containing the upstream client IP when trusting proxies.",
+    )
     allowed_origins: list[str] = Field(
         default_factory=list,
         description="List of allowed CORS origins for the public API.",

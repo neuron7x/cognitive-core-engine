@@ -101,6 +101,19 @@ curl -H "X-API-Key: your_api_key" http://localhost:8000/api/health
 Параметри обмеження швидкості контролюються змінними `COG_RATE_LIMIT_RPS`
 та `COG_RATE_LIMIT_BURST`.
 
+Якщо сервіс працює за балансувальником (Nginx, Envoy, Kubernetes Ingress тощо),
+увімкніть довіру до проксі-заголовків, аби ліміти розраховувалися за справжніми
+клієнтськими IP-адресами:
+
+```bash
+export COG_TRUST_PROXY_HEADERS=true
+export COG_TRUSTED_PROXY_HEADER=X-Forwarded-For  # або власна назва заголовка
+```
+
+Сервіс зчитує ліву «публічну» адресу з вказаного заголовка та використовує її
+для сегментації rate limit. Якщо жодна адреса не підходить, middleware
+повертається до IP підключеного клієнта.
+
 ### Troubleshooting
 
 - **Відсутні залежності.** Деякі функції потребують додаткових пакетів

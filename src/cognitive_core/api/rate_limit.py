@@ -5,9 +5,12 @@ import logging
 import threading
 import time
 
+import ipaddress
+
 from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
+from uvicorn.middleware.proxy_headers import _parse_raw_hosts
 
 from ..config import settings
 
@@ -151,7 +154,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             self.limiter
             and request.url.path.startswith(settings.api_prefix)
         ):
-            client_host = request.client.host if request.client else None
+            client_host = self._resolve_client_host(request)
             if client_host and not self._allow_or_fallback(f"ip:{client_host}"):
                 return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
 
@@ -159,3 +162,24 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             if api_key and not self._allow_or_fallback(f"key:{api_key}"):
                 return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
         return await call_next(request)
+
+    def _resolve_client_host(self, request: Request) -> str | None:
+        client_host = request.client.host if request.client else None
+
+        if settings.trust_proxy_headers:
+            header_name = settings.trusted_proxy_header
+            if header_name:
+                header_value = request.headers.get(header_name)
+                if header_value:
+                    for raw_host in _parse_raw_hosts(header_value):
+                        host = raw_host.strip()
+                        if not host:
+                            continue
+                        try:
+                            ip = ipaddress.ip_address(host)
+                        except ValueError:
+                            continue
+                        if ip.is_global:
+                            return host
+
+        return client_host
