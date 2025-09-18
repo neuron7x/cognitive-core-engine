@@ -14,11 +14,11 @@ except ModuleNotFoundError:  # pragma: no cover - skip if SQLAlchemy unavailable
     pytest.skip("sqlalchemy is not installed", allow_module_level=True)
 
 
-def test_alembic_upgrade_head(tmp_path):
+def test_alembic_upgrade_head(tmp_path, monkeypatch):
     """Run Alembic migrations and ensure tables are created."""
 
     db_url = f"sqlite:///{tmp_path/'test.sqlite'}"
-    os.environ["DATABASE_URL"] = db_url
+    monkeypatch.setenv("DATABASE_URL", db_url)
 
     cfg = Config("alembic.ini")
     command.upgrade(cfg, "head")
