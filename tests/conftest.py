@@ -10,6 +10,7 @@ except Exception:
 
 from cognitive_core import config
 from cognitive_core.api import auth
+from cognitive_core.api import rate_limit
 from cognitive_core.api.main import app
 
 @pytest.fixture(scope="function")
@@ -18,6 +19,15 @@ def api_client(monkeypatch):
     monkeypatch.setenv("COG_API_KEY", api_key)
     config.settings = config.Settings(api_key=api_key)
     auth.settings = config.settings
+    monkeypatch.setattr(
+        rate_limit, "RedisBucketLimiter", None, raising=False
+    )
+    monkeypatch.setattr(
+        rate_limit,
+        "_redis_import_error",
+        RuntimeError("redis package unavailable"),
+        raising=False,
+    )
     client = TestClient(app)
     client.headers.update({"X-API-Key": api_key})
     return client
