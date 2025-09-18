@@ -35,3 +35,21 @@ def test_provider_wrapper_falls_back_to_in_memory_rate_limits(monkeypatch):
     assert first["_cost_accum"] == pytest.approx(0.5)
     assert wrapper.tracker.get_cost("client") == pytest.approx(0.5)
     assert second["error"] == "rate_limited"
+
+
+def test_provider_wrapper_defaults_to_in_memory_limiter(monkeypatch):
+    monkeypatch.delenv("REDIS_URL", raising=False)
+    monkeypatch.setattr(provider_wrapper.settings, "rate_limit_burst", 1, raising=False)
+    monkeypatch.setattr(provider_wrapper.settings, "rate_limit_rps", 0.0, raising=False)
+
+    wrapper = provider_wrapper.ProviderWrapper(CostlyProvider())
+
+    assert isinstance(wrapper.limiter, provider_wrapper.InMemoryBucketLimiter)
+    assert isinstance(wrapper.tracker, provider_wrapper.InMemoryCostTracker)
+
+    first = wrapper.run("hello", client_id="client")
+    second = wrapper.run("world", client_id="client")
+
+    assert first["_cost_accum"] == pytest.approx(0.5)
+    assert wrapper.tracker.get_cost("client") == pytest.approx(0.5)
+    assert second["error"] == "rate_limited"

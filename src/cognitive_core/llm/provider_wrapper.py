@@ -44,6 +44,11 @@ class ProviderWrapper:
                     exc,
                 )
                 self._ensure_in_memory_limiter()
+        else:
+            logger.info(
+                "REDIS_URL not configured; using in-memory rate limiter and cost tracker."
+            )
+            self._ensure_in_memory_limiter()
 
     def run(self, prompt: str, client_id: str = "default", **kwargs) -> dict:
         est_tokens = max(1, len(prompt) // 4)
