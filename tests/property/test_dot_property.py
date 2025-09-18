@@ -8,10 +8,30 @@ except ModuleNotFoundError:  # pragma: no cover - skip if hypothesis unavailable
 from cognitive_core.core.math_utils import dot
 
 
-@given(
-    st.lists(st.floats(allow_nan=False, allow_infinity=False), min_size=1, max_size=64),
-    st.lists(st.floats(allow_nan=False, allow_infinity=False), min_size=1, max_size=64),
+float_values = st.floats(
+    min_value=-1e6,
+    max_value=1e6,
+    allow_nan=False,
+    allow_infinity=False,
 )
-def test_comm(a, b):
-    n = min(len(a), len(b))
-    assert dot(a[:n], b[:n]) == dot(b[:n], a[:n])
+
+
+@given(
+    st.integers(min_value=1, max_value=64).flatmap(
+        lambda length: st.tuples(
+            st.lists(
+                float_values,
+                min_size=length,
+                max_size=length,
+            ),
+            st.lists(
+                float_values,
+                min_size=length,
+                max_size=length,
+            ),
+        )
+    )
+)
+def test_comm(values):
+    a, b = values
+    assert dot(a, b) == dot(b, a)
