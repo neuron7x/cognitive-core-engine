@@ -9,7 +9,6 @@
 # (The actual lock should contain exact versions with --hash entries.)
 
 pydantic>=2.7,<3.0
-typing-extensions>=4.8,<5.0
 fastapi>=0.111,<0.120
 uvicorn>=0.29,<0.36
 httpx>=0.25,<0.29
