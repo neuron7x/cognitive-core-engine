@@ -52,6 +52,32 @@ Use [`pip-tools`](https://github.com/jazzband/pip-tools) to keep dependency pins
 
 The CI workflow reruns the same `pip-compile` command and fails if the generated lock file does not match the committed version, so make sure to regenerate it before opening a pull request.
 
+## Release workflow
+
+Use the following checklist to publish a new version on PyPI:
+
+1. **Update metadata.** Bump the version and classifiers in `pyproject.toml`, refresh the README snippets, and commit the changes.
+2. **Build artifacts.** From a clean tree run:
+   ```bash
+   rm -rf dist/
+   python -m build
+   ```
+3. **Validate metadata.** Ensure the generated archives pass the Twine check:
+   ```bash
+   python -m twine check dist/*
+   ```
+4. **Upload to PyPI.** Use an API token stored in `~/.pypirc` (or pass it via environment variables) and push the artifacts:
+   ```bash
+   python -m twine upload dist/*
+   ```
+   > Tip: export `TWINE_USERNAME=__token__` and `TWINE_PASSWORD=<pypi-token>` when running in CI.
+5. **Tag the release.** Create a Git tag after a successful upload:
+   ```bash
+   git tag -a v$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])") -m "Release"
+   git push origin --tags
+   ```
+6. **Announce.** Update `README.md`, changelog entries, and notify the team.
+
 ## Observability
 ```mermaid
 flowchart LR
