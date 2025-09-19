@@ -3,16 +3,7 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir \
-        requests \
-        httpx \
-        redis \
-        sqlalchemy \
-        alembic \
-        psycopg2-binary \
-        prometheus-client \
-        structlog
+RUN pip install --upgrade pip
 
 ARG APP_USER=appuser
 ARG APP_UID=1000
@@ -28,6 +19,8 @@ RUN set -eux; \
         "${APP_USER}"
 
 COPY --chown=${APP_USER}:${APP_USER} . /app
+
+RUN pip install --no-cache-dir .[api]
 
 RUN set -eux; \
     install -d -m 0755 \
