@@ -133,6 +133,14 @@ cogctl dotv 1,2,3 4,5,6
 # Розв'язання системи 2x2
 cogctl solve2x2 1 2 3 4 5 6
 # -> {"x": -4.0, "y": 4.5}
+
+# Запуск демо-пайплайна
+cogctl pipeline run --name demo
+# -> Running pipeline demo
+
+# Якщо вказати хибну назву, CLI завершиться з кодом 1 та повідомленням у stderr
+cogctl pipeline run --name does-not-exist
+# stderr: Pipeline 'does-not-exist' not found. Available pipelines: demo
 ```
 
 ## Тестування

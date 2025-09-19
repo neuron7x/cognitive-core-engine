@@ -13,6 +13,12 @@ from .app.services import dot as dot_service
 from .core.math_utils import solve_2x2
 
 
+# Demo registry of available pipelines.
+_PIPELINE_REGISTRY: dict[str, str] = {
+    "demo": "Demo pipeline",
+}
+
+
 def _run_alembic(*args: str) -> int:
     """Run an alembic command if alembic is installed.
 
@@ -124,7 +130,16 @@ def handle_args(args: argparse.Namespace) -> int:
         return 1
 
     if args.cmd == "pipeline" and args.action == "run":
-        print(f"Running pipeline {args.name}")
+        pipeline_name = args.name
+        if pipeline_name not in _PIPELINE_REGISTRY:
+            available = ", ".join(sorted(_PIPELINE_REGISTRY)) or "<none>"
+            print(
+                f"Pipeline '{pipeline_name}' not found. Available pipelines: {available}",
+                file=sys.stderr,
+            )
+            return 1
+
+        print(f"Running pipeline {pipeline_name}")
         return 0
 
     if args.cmd == "plugin":

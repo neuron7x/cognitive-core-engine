@@ -72,6 +72,26 @@ def test_cli_pipeline_run():
 
 
 @pytest.mark.integration
+def test_cli_pipeline_run_missing_pipeline():
+    expected = "Pipeline 'does-not-exist' not found"
+    invoked = False
+    errors = []
+    for exe in ("cogctl", "python -m cognitive_core.cli"):
+        rc, out, err = _run(f"{exe} pipeline run --name does-not-exist")
+        if rc is None:
+            continue
+        invoked = True
+        if rc and (err or out):
+            message = err or out
+            assert expected in message
+            return
+        errors.append(f"{exe}: {err or out}")
+    if not invoked:
+        pytest.skip("CLI not available")
+    pytest.fail("; ".join(errors) or "CLI did not signal missing pipeline")
+
+
+@pytest.mark.integration
 def test_cli_dotv_mismatched_vectors():
     expected_message = "Vectors must be the same length"
     invoked = False
