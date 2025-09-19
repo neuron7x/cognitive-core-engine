@@ -152,18 +152,20 @@ cogctl dotv 1,2,3 4,5,6
 cogctl solve2x2 1 2 3 4 5 6
 # -> {"x": -4.0, "y": 4.5}
 
-# Запуск пайплайна з локального реєстру
-cogctl pipeline run --name sample
-# -> {"run_id": "...", "status": "completed", "artifacts": ["result"]}
+# Запуск демо-пайплайна з локального реєстру
+cogctl pipeline run --name demo
+# -> {"run_id": "...", "status": "completed", "artifacts": ["demo"]}
 
 # Виконання через API (потрібен запущений бекенд на http://localhost:8000)
-cogctl pipeline run --name sample --api-url http://localhost:8000
+cogctl pipeline run --name demo --api-url http://localhost:8000
 # або експортуйте COGCORE_API_URL, щоб уникнути передачі параметра щоразу
 export COGCORE_API_URL=http://localhost:8000
-cogctl pipeline run --name sample
+cogctl pipeline run --name demo
 ```
 
 > **Примітка.** Для віддаленого запуску необхідний працюючий сервіс `cognitive-core` з ввімкненим маршрутом `POST /api/v1/pipelines/run`. У режимі локального виконання CLI використовує вбудований реєстр пайплайнів і виконує їх через `PipelineExecutor` без звернення до мережі.
+
+> **Tip.** Тестовий пайплайн `sample` усе ще доступний для внутрішніх тестів CLI і повертає артефакт `result`.
 
 ## Тестування
 

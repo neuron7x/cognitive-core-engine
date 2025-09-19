@@ -33,3 +33,12 @@ def _sample_step() -> Artifact:
 
 
 register_pipeline(Pipeline(id="sample", name="Sample", steps=[_sample_step]))
+
+
+def _demo_step() -> Artifact:
+    """Return a simple artifact used by the demo pipeline."""
+
+    return Artifact(name="demo", data={"message": "hello from demo"})
+
+
+register_pipeline(Pipeline(id="demo", name="Demo", steps=[_demo_step]))
