@@ -8,9 +8,20 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 from .app.services import dot as dot_service
 from .core.math_utils import solve_2x2
+from .core.pipeline_executor import PipelineExecutor
+from .pipelines import registry as pipeline_registry
+
+
+class PipelineError(Exception):
+    """Base error for pipeline command failures."""
+
+
+class PipelineNotFoundError(PipelineError):
+    """Raised when a pipeline cannot be located."""
 
 
 def _run_alembic(*args: str) -> int:
@@ -55,6 +66,58 @@ def _install_allowlisted_plugin(module: str) -> None:
         )
 
 
+def _run_pipeline_locally(name: str) -> dict[str, Any]:
+    pipeline = pipeline_registry.get_pipeline(name)
+    if not pipeline:
+        raise PipelineNotFoundError(f"Pipeline '{name}' not found")
+
+    executor = PipelineExecutor()
+    try:
+        run = executor.execute(pipeline)
+    except Exception as exc:  # pragma: no cover - defensive guardrail
+        raise PipelineError(f"Pipeline '{name}' execution failed: {exc}") from exc
+
+    return {
+        "run_id": run.id,
+        "status": run.status,
+        "artifacts": [artifact.name for artifact in run.artifacts],
+    }
+
+
+def _run_pipeline_remotely(name: str, api_url: str) -> dict[str, Any]:
+    import httpx
+
+    endpoint = f"{api_url.rstrip('/')}/api/v1/pipelines/run"
+    try:
+        response = httpx.post(endpoint, json={"pipeline_id": name}, timeout=10.0)
+    except httpx.HTTPError as exc:
+        raise PipelineError(f"Failed to contact pipeline API at {endpoint}: {exc}") from exc
+
+    if response.status_code == 404:
+        raise PipelineNotFoundError(f"Pipeline '{name}' not found")
+
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        detail = response.text
+        raise PipelineError(
+            f"Pipeline '{name}' run request failed with status {response.status_code}: {detail}"
+        ) from exc
+
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise PipelineError("Pipeline API returned invalid JSON response") from exc
+
+    return data
+
+
+def _run_pipeline(name: str, api_url: str | None) -> dict[str, Any]:
+    if api_url:
+        return _run_pipeline_remotely(name, api_url)
+    return _run_pipeline_locally(name)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="cogctl")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -81,6 +144,10 @@ def build_parser() -> argparse.ArgumentParser:
     pipeline_sub = p_pipeline.add_subparsers(dest="action", required=True)
     p_run = pipeline_sub.add_parser("run")
     p_run.add_argument("--name", required=True)
+    p_run.add_argument(
+        "--api-url",
+        help="Base URL of a running cognitive-core API service. If omitted, the CLI runs pipelines using local definitions.",
+    )
 
     p_plugin = sub.add_parser("plugin")
     plugin_sub = p_plugin.add_subparsers(dest="action", required=True)
@@ -124,7 +191,17 @@ def handle_args(args: argparse.Namespace) -> int:
         return 1
 
     if args.cmd == "pipeline" and args.action == "run":
-        print(f"Running pipeline {args.name}")
+        api_url = getattr(args, "api_url", None) or os.environ.get("COGCORE_API_URL")
+        try:
+            result = _run_pipeline(args.name, api_url)
+        except PipelineNotFoundError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        except PipelineError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+
+        print(json.dumps(result))
         return 0
 
     if args.cmd == "plugin":
