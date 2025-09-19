@@ -259,8 +259,10 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: ${{ runner.os }}-buildx-
       - name: Login GHCR
+        if: github.event_name == 'push'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build and push
+        if: github.event_name == 'push'
         run: |
           IMAGE=ghcr.io/${{ github.repository }}
           TAG_BRANCH=${{ github.ref_name }}
@@ -270,6 +272,14 @@ jobs:
             TAGS="$TAGS --tag $IMAGE:latest"
           fi
           docker buildx build . --push --platform linux/amd64,linux/arm64 $TAGS --cache-from type=local,src=/tmp/.buildx-cache --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max
+      - name: Build (no push)
+        if: github.event_name != 'push'
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}
+          TAG_BRANCH=${{ github.ref_name }}
+          TAG_SHA=${{ github.sha }}
+          TAGS="--tag $IMAGE:$TAG_BRANCH --tag $IMAGE:$TAG_SHA"
+          docker buildx build . --load --platform linux/amd64 $TAGS --cache-from type=local,src=/tmp/.buildx-cache --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max
       - name: Move cache
         if: always()
         run: |
