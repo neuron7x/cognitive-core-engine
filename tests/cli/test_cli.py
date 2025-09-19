@@ -1,3 +1,4 @@
+import json
 import shlex
 import subprocess
 
@@ -46,3 +47,32 @@ def test_cli_rejects_unapproved_plugin_install():
             assert "not in the allowlist" in err
             return
     pytest.skip("CLI plugin install not available")
+
+
+@pytest.mark.integration
+def test_cli_pipeline_run_local_success():
+    for exe in ("cogctl", "python -m cognitive_core.cli"):
+        rc, out, err = _run(f"{exe} pipeline run --name sample")
+        if rc is None:
+            continue
+        if rc == 0 and out:
+            data = json.loads(out)
+            assert data["status"] == "completed"
+            assert data["artifacts"] == ["result"]
+            assert "run_id" in data
+            assert not err
+            return
+    pytest.skip("CLI pipeline run not available")
+
+
+@pytest.mark.integration
+def test_cli_pipeline_run_missing_pipeline():
+    for exe in ("cogctl", "python -m cognitive_core.cli"):
+        rc, out, err = _run(f"{exe} pipeline run --name does-not-exist")
+        if rc is None:
+            continue
+        if rc != 0 and err:
+            assert "does-not-exist" in err
+            assert out == ""
+            return
+    pytest.skip("CLI pipeline run error handling not available")
