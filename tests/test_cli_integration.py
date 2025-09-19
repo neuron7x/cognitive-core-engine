@@ -1,12 +1,16 @@
+import json
+import os
 import shlex
 import subprocess
 
 import pytest
 
 
-def _run(cmd: str):
+def _run(cmd: str, env: dict[str, str] | None = None):
     try:
-        proc = subprocess.run(shlex.split(cmd), capture_output=True, text=True)
+        proc = subprocess.run(
+            shlex.split(cmd), capture_output=True, text=True, env=env
+        )
     except FileNotFoundError:
         return None, "", "command not found"
     return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
@@ -54,13 +58,24 @@ def test_cli_migrate_status():
 def test_cli_pipeline_run():
     invoked = False
     errors = []
+    env = os.environ.copy()
+    env["COGNITIVE_CORE_PIPELINE_REGISTRY"] = "tests.pipeline_registry_stub"
     for exe in ("cogctl", "python -m cognitive_core.cli"):
-        rc, out, err = _run(f"{exe} pipeline run --name demo")
+        rc, out, err = _run(f"{exe} pipeline run --name demo", env=env)
         if rc is None:
             continue
         invoked = True
         if rc == 0 and out:
-            assert "demo" in out
+            data = json.loads(out)
+            assert data["pipeline"]["id"] == "demo"
+            assert data["run"]["status"] == "completed"
+            artifact_lookup = {
+                artifact["name"]: artifact for artifact in data["run"]["artifacts"]
+            }
+            assert "demo_step" in artifact_lookup
+            assert artifact_lookup["demo_step"]["data"]["value"] == 42
+            event_steps = {event["step"] for event in data["run"]["events"]}
+            assert "_demo_step" in event_steps
             return
         if rc != 0:
             errors.append(f"{exe}: {err or out}")
