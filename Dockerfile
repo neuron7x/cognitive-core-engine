@@ -49,4 +49,4 @@ USER ${APP_USER}
 EXPOSE 8000
 CMD ["uvicorn", "cognitive_core.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python -c "import os, urllib.request as u; raw=os.environ.get('COG_API_PREFIX', '/api'); prefix='/' + raw.strip('/') if raw else ''; prefix='' if prefix == '/' else prefix; u.urlopen(f'http://127.0.0.1:8000{prefix}/health')" || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python -c "import os, urllib.request as u; raw=os.environ.get('COG_API_PREFIX', '/api'); prefix='/' + raw.strip('/') if raw else ''; prefix='' if prefix == '/' else prefix; key=os.environ.get('COG_API_KEY', ''); key=(key.split(',')[0].strip() if key else ''); req=u.Request(f'http://127.0.0.1:8000{prefix}/health');\nif key: req.add_header('X-API-Key', key); u.urlopen(req)" || exit 1
