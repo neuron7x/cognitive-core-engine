@@ -107,6 +107,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             "refill_per_sec": settings.rate_limit_rps,
         }
         self._limiter_kwargs = limiter_kwargs
+        self.limiter: object | None = None
 
         if RedisBucketLimiter is None:
             reason = _redis_import_error or "redis client not available"
@@ -123,7 +124,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             self._swap_to_in_memory(exc)
 
     def _swap_to_in_memory(self, reason: Exception | str | None = None) -> None:
-        if isinstance(self.limiter, InMemoryBucketLimiter):
+        current = getattr(self, "limiter", None)
+        if isinstance(current, InMemoryBucketLimiter):
             return
 
         if reason is not None:
