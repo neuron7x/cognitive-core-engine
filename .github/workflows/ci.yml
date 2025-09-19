@@ -158,6 +158,7 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
       - name: Vet
         run: go vet ./...
+      - run: mkdir -p reports
       - name: Test
         run: go test ./... -coverprofile=cover.out -json > reports/go-test.json
       - name: Coverage
@@ -223,6 +224,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings || true
+      - run: mkdir -p reports
       - name: Test
         run: cargo test --all -- --format=json --report-time | tee reports/rust-test.json
       - name: Coverage
