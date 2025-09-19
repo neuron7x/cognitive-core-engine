@@ -88,8 +88,15 @@ def _run_pipeline_remotely(name: str, api_url: str) -> dict[str, Any]:
     import httpx
 
     endpoint = f"{api_url.rstrip('/')}/api/v1/pipelines/run"
+    api_key = os.environ.get("COGCTL_API_KEY") or os.environ.get("COG_API_KEY")
+    headers = {"X-API-Key": api_key} if api_key else None
     try:
-        response = httpx.post(endpoint, json={"pipeline_id": name}, timeout=10.0)
+        response = httpx.post(
+            endpoint,
+            json={"pipeline_id": name},
+            timeout=10.0,
+            headers=headers,
+        )
     except httpx.HTTPError as exc:
         raise PipelineError(f"Failed to contact pipeline API at {endpoint}: {exc}") from exc
 

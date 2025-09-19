@@ -161,6 +161,11 @@ cogctl pipeline run --name sample --api-url http://localhost:8000
 # або експортуйте COGCORE_API_URL, щоб уникнути передачі параметра щоразу
 export COGCORE_API_URL=http://localhost:8000
 cogctl pipeline run --name sample
+
+# Для аутентифікації CLI може використовувати окремий ключ
+export COGCTL_API_KEY=your_cli_api_key
+# Або повторно використовуйте основний ключ API
+export COG_API_KEY=your_api_key
 ```
 
 > **Примітка.** Для віддаленого запуску необхідний працюючий сервіс `cognitive-core` з ввімкненим маршрутом `POST /api/v1/pipelines/run`. У режимі локального виконання CLI використовує вбудований реєстр пайплайнів і виконує їх через `PipelineExecutor` без звернення до мережі.
