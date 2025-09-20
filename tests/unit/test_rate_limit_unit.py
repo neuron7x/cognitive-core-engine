@@ -9,6 +9,7 @@ except Exception:  # pragma: no cover - allow running without fastapi installed
 import cognitive_core.api.rate_limit as rate_limit
 from cognitive_core.api.rate_limit import InMemoryBucketLimiter, RateLimitMiddleware
 from cognitive_core.config import settings
+from starlette.requests import Request
 
 
 def test_rate_limit_falls_back_to_in_memory(monkeypatch, caplog):
@@ -73,3 +74,21 @@ def test_in_memory_rate_limiter_enforces_limits(monkeypatch):
 
     assert first.status_code == 200
     assert second.status_code == 429
+
+
+def test_resolve_client_host_prefers_first_global_from_proxy(monkeypatch):
+    monkeypatch.setattr(settings, "trust_proxy_headers", True)
+    monkeypatch.setattr(settings, "trusted_proxy_header", "X-Forwarded-For")
+    monkeypatch.setattr(rate_limit, "settings", settings)
+
+    app = FastAPI()
+    middleware = RateLimitMiddleware(app)
+
+    scope = {
+        "type": "http",
+        "headers": [(b"x-forwarded-for", b"10.0.0.1, 8.8.8.8, 1.1.1.1")],
+        "client": ("127.0.0.1", 12345),
+    }
+    request = Request(scope)
+
+    assert middleware._resolve_client_host(request) == "8.8.8.8"

@@ -6,11 +6,11 @@ import threading
 import time
 
 import ipaddress
+from typing import Iterable
 
 from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-from uvicorn.middleware.proxy_headers import _parse_raw_hosts
 
 from ..config import settings
 
@@ -102,6 +102,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app):
         super().__init__(app)
+        self.limiter: InMemoryBucketLimiter | RedisBucketLimiter | None = None
         limiter_kwargs = {
             "capacity": settings.rate_limit_burst,
             "refill_per_sec": settings.rate_limit_rps,
@@ -171,7 +172,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             if header_name:
                 header_value = request.headers.get(header_name)
                 if header_value:
-                    for raw_host in _parse_raw_hosts(header_value):
+                    for raw_host in _parse_proxy_header_hosts(header_value):
                         host = raw_host.strip()
                         if not host:
                             continue
@@ -183,3 +184,30 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                             return host
 
         return client_host
+
+
+def _parse_proxy_header_hosts(value: str) -> Iterable[str]:
+    """Yield individual host entries from a trusted proxy header value."""
+
+    for part in value.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        # RFC 7239 Forwarded headers may include key/value pairs (e.g. "for=1.2.3.4")
+        # while X-Forwarded-For typically contains a simple comma-delimited list.
+        # Split on whitespace to handle either form without relying on uvicorn internals.
+        for token in part.split():
+            if not token:
+                continue
+            if token.lower().startswith("for="):
+                _, _, forwarded_value = token.partition("=")
+                forwarded_value = forwarded_value.strip('"')
+                if (
+                    forwarded_value.startswith("[")
+                    and forwarded_value.endswith("]")
+                    and len(forwarded_value) >= 2
+                ):
+                    forwarded_value = forwarded_value[1:-1]
+                yield forwarded_value
+            else:
+                yield token
