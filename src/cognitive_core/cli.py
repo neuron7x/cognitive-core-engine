@@ -127,7 +127,11 @@ def _run_pipeline_remotely(name: str, api_url: str) -> dict[str, Any]:
 
     endpoint = f"{api_url.rstrip('/')}/api/v1/pipelines/run"
     api_key = os.environ.get("COGCTL_API_KEY") or os.environ.get("COG_API_KEY")
-    headers = {"X-API-Key": api_key} if api_key else None
+    if not api_key:
+        raise PipelineError(
+            "Remote pipeline execution requires an API key. Set COGCTL_API_KEY or COG_API_KEY."
+        )
+    headers = {"X-API-Key": api_key}
     try:
         response = httpx.post(
             endpoint,
@@ -192,7 +196,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--name", required=True)
     p_run.add_argument(
         "--api-url",
-        help="Base URL of a running cognitive-core API service. If omitted, the CLI runs pipelines using local definitions.",
+        help=(
+            "Base URL of a running cognitive-core API service. If omitted, the CLI runs pipelines using local definitions. "
+            "Remote execution requires COGCTL_API_KEY or COG_API_KEY to be set."
+        ),
     )
 
     p_plugin = sub.add_parser("plugin")
