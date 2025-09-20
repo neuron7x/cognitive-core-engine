@@ -1,4 +1,3 @@
-import hashlib
 import importlib
 import logging
 from types import SimpleNamespace
@@ -217,7 +216,7 @@ def test_in_memory_limiter_prunes_tokens_when_no_refill(monkeypatch):
 
 def test_redis_limiter_logs_redacted_token(monkeypatch, caplog):
     token = "super-secret-token"
-    token_digest = hashlib.sha256(token.encode("utf-8")).hexdigest()[:12]
+    token_digest = core_rate_limiter._token_fingerprint(token)
 
     class FakeRedisClient:
         def script_load(self, script: str):  # pragma: no cover - simple stub

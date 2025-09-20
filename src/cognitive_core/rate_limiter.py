@@ -39,6 +39,18 @@ return {allowed, tostring(tokens)}
 """
 
 
+def _token_fingerprint(token: str) -> str:
+    """Return a stable, non-reversible fingerprint for sensitive tokens.
+
+    The value is truncated to keep log lines compact while still allowing
+    operators to correlate repeated failures for the same credential.
+    """
+
+    if not token:
+        return "<empty-token>"
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()[:12]
+
+
 class RedisBucketLimiter:
     def __init__(
         self,
@@ -75,7 +87,7 @@ class RedisBucketLimiter:
             allowed = int(res[0]) == 1
             return allowed
         except Exception as exc:
-            token_digest = hashlib.sha256(token.encode("utf-8")).hexdigest()[:12]
+            token_digest = _token_fingerprint(token)
             logger.warning(
                 "Redis rate limiter error for token hash '%s': %s",
                 token_digest,
