@@ -35,6 +35,48 @@ Steps:
 > ```
 > Alternatively, use group-based permissions so that the directory is accessible without changing ownership.
 
+## Systemd deployment
+
+Deploying the API as a long-running service requires an environment file that
+stores secrets such as the database credentials and, critically, a strong API
+key. The provided unit file expects `/etc/cognitive-core.env` to exist and be
+readable by the `www-data` user.
+
+1. Copy the unit file:
+   ```bash
+   sudo cp deployment/cognitive_core.service /etc/systemd/system/
+   ```
+2. Create the environment file with locked-down permissions:
+   ```bash
+   sudo install -m 640 -o www-data -g www-data /dev/null /etc/cognitive-core.env
+   ```
+3. Populate `/etc/cognitive-core.env` with production values. Generate a
+   cryptographically strong API key before enabling the service:
+   ```bash
+   sudo bash -c 'cat <<"EOF" > /etc/cognitive-core.env
+   COG_API_KEY=$(openssl rand -hex 32)
+   DATABASE_URL=postgresql+psycopg2://user:password@db.example.com:5432/cce
+   REDIS_URL=redis://cache.example.com:6379/0
+   COG_APP_NAME=Cognitive Core Engine
+   COG_API_PREFIX=/api
+   COG_RATE_LIMIT_RPS=5
+   COG_RATE_LIMIT_BURST=10
+   EOF'
+   ```
+   Replace the placeholder connection strings with the values specific to your
+   deployment and rotate the API key regularly. Do **not** use the sample
+   `changeme` token or commit secrets to version control.
+4. Reload systemd and enable the service:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now cognitive_core.service
+   ```
+
+If the environment file is missing, the service will fail to start; this is a
+guardrail to prevent deployments without an API key. Rotate credentials by
+updating `/etc/cognitive-core.env` and running `sudo systemctl restart
+cognitive_core.service`.
+
 ## Dependency management
 
 Use [`pip-tools`](https://github.com/jazzband/pip-tools) to keep dependency pins and the lock file consistent with `requirements.txt`.
