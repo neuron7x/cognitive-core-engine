@@ -209,3 +209,27 @@ def test_in_memory_limiter_prunes_tokens_when_no_refill(monkeypatch):
 
     assert limiter._state == {}
     assert not limiter._expirations
+
+
+def test_in_memory_limiter_no_refill_expirations_remain_bounded(monkeypatch):
+    current_time = 0.0
+
+    monkeypatch.setattr(rate_limit.time, "time", lambda: current_time)
+
+    limiter = rate_limit.InMemoryBucketLimiter(capacity=1, refill_per_sec=0.0)
+
+    token = "stress-token"
+    assert limiter.allow(token)
+
+    assert len(limiter._expirations) == 1
+    initial_expiry = limiter._state[token][2]
+
+    for _ in range(1000):
+        current_time += 1.0
+        assert not limiter.allow(token)
+        assert len(limiter._expirations) == 1
+        assert limiter._state[token][2] == initial_expiry
+
+    current_time = initial_expiry + 1.0
+    assert limiter.allow(token)
+    assert len(limiter._expirations) == 1
