@@ -3,6 +3,7 @@ from __future__ import annotations
 """Simplified SQLiteVec adapter used for tests."""
 
 from collections import Counter
+import heapq
 import math
 import re
 from typing import List, Tuple
@@ -42,9 +43,12 @@ class SQLiteVecMemoryAdapter(MemoryAdapter):
 
     def retrieve(self, query: str, top_k: int = 1) -> List[str]:
         query_emb = _embed(query)
-        ranked = sorted(
-            self._store,
-            key=lambda item: _cosine(query_emb, item[0]),
-            reverse=True,
+        if not self._store or top_k <= 0:
+            return []
+
+        scored = (
+            (_cosine(query_emb, embedding), text)
+            for embedding, text in self._store
         )
-        return [text for _, text in ranked[:top_k]]
+        top_results = heapq.nlargest(top_k, scored, key=lambda item: item[0])
+        return [text for _, text in top_results]
