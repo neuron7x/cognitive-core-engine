@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from .app.services import dot as dot_service
 from .core.math_utils import solve_2x2
@@ -66,6 +66,42 @@ def _install_allowlisted_plugin(module: str) -> None:
         )
 
 
+def _format_pipeline_result(
+    *, pipeline_id: str, run_id: str, status: str, artifacts: Iterable[str]
+) -> dict[str, Any]:
+    """Return a normalized pipeline run payload."""
+
+    return {
+        "pipeline_id": pipeline_id,
+        "run_id": run_id,
+        "status": status,
+        "artifacts": list(artifacts),
+    }
+
+
+def _normalize_pipeline_result(data: dict[str, Any]) -> dict[str, Any]:
+    """Validate and normalize a pipeline run result payload."""
+
+    try:
+        pipeline_id = data["pipeline_id"]
+        run_id = data["run_id"]
+        status = data["status"]
+    except KeyError as exc:
+        missing = exc.args[0]
+        raise PipelineError(f"Pipeline response missing required field '{missing}'") from exc
+
+    artifacts = data.get("artifacts", [])
+    if not isinstance(artifacts, list):
+        artifacts = list(artifacts)
+
+    return _format_pipeline_result(
+        pipeline_id=pipeline_id,
+        run_id=run_id,
+        status=status,
+        artifacts=artifacts,
+    )
+
+
 def _run_pipeline_locally(name: str) -> dict[str, Any]:
     pipeline = pipeline_registry.get_pipeline(name)
     if not pipeline:
@@ -77,11 +113,12 @@ def _run_pipeline_locally(name: str) -> dict[str, Any]:
     except Exception as exc:  # pragma: no cover - defensive guardrail
         raise PipelineError(f"Pipeline '{name}' execution failed: {exc}") from exc
 
-    return {
-        "run_id": run.id,
-        "status": run.status,
-        "artifacts": [artifact.name for artifact in run.artifacts],
-    }
+    return _format_pipeline_result(
+        pipeline_id=pipeline.id,
+        run_id=run.id,
+        status=run.status,
+        artifacts=(artifact.name for artifact in run.artifacts),
+    )
 
 
 def _run_pipeline_remotely(name: str, api_url: str) -> dict[str, Any]:
@@ -109,7 +146,7 @@ def _run_pipeline_remotely(name: str, api_url: str) -> dict[str, Any]:
     except ValueError as exc:
         raise PipelineError("Pipeline API returned invalid JSON response") from exc
 
-    return data
+    return _normalize_pipeline_result(data)
 
 
 def _run_pipeline(name: str, api_url: str | None) -> dict[str, Any]:

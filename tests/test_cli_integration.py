@@ -1,3 +1,4 @@
+import json
 import shlex
 import subprocess
 
@@ -55,12 +56,13 @@ def test_cli_pipeline_run():
     invoked = False
     errors = []
     for exe in ("cogctl", "python -m cognitive_core.cli"):
-        rc, out, err = _run(f"{exe} pipeline run --name demo")
+        rc, out, err = _run(f"{exe} pipeline run --name sample")
         if rc is None:
             continue
         invoked = True
         if rc == 0 and out:
-            assert "demo" in out
+            data = json.loads(out)
+            assert data["pipeline_id"] == "sample"
             return
         if rc != 0:
             errors.append(f"{exe}: {err or out}")

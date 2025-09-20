@@ -46,6 +46,7 @@ def run_pipeline(req: RunRequest = Body(...)):
     run = executor.execute(pipeline)
     record_llm_tokens("run_pipeline", len(run.artifacts))
     return {
+        "pipeline_id": pipeline.id,
         "run_id": run.id,
         "status": run.status,
         "artifacts": [a.name for a in run.artifacts],
