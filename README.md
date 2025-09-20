@@ -181,7 +181,7 @@ export COG_API_KEY=your_api_key
 pytest
 
 # запуск лише CLI та API тестів
-pytest tests/cli/test_cli.py tests/api/test_root.py
+pytest tests/test_cli_integration.py tests/test_health_api.py
 
 # навантажувальне тестування Locust
 export COG_API_KEY=your_api_key

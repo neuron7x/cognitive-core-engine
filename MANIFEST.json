@@ -58,10 +58,19 @@
     "tests/property/test_dot_property.py",
     "tests/repo/test_repo_sanity.py",
     "tests/repo/test_workflows_yaml_valid.py",
+    "tests/test_cli_integration.py",
+    "tests/test_cli_pipeline_unit.py",
+    "tests/test_docs_build.py",
     "tests/test_dot_api.py",
     "tests/test_health_api.py",
+    "tests/test_math_api.py",
+    "tests/test_math_consistency.py",
+    "tests/test_pipeline_executor.py",
+    "tests/test_pipelines_api.py",
+    "tests/test_plugins_registry.py",
     "tests/test_solve2x2_api.py",
     "tests/test_sse_api.py",
+    "tests/test_version.py",
     "tools/validate.py"
   ]
 }
