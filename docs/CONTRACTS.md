@@ -4,5 +4,6 @@
 - `POST /api/dot`  → 200, body: `{"result": <float>}`
   Request JSON: `{"a":[number,...], "b":[number,...]}`
 - `POST /api/solve2x2` → 200, body: `{"x": <float>, "y": <float>}`
-  Request JSON: `{"a11":..., "a12":..., "a21":..., "a22":..., "b1":..., "b2":...}`
+  Request JSON: `{"a":..., "b":..., "c":..., "d":..., "e":..., "f":...}`
+  (Corresponds to solving `[ [a, b], [c, d] ] * [x, y]^T = [e, f]^T`.)
 - `GET /api/events/sse` → 200 (text/event-stream), events: `tick`
