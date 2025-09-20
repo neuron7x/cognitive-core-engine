@@ -57,6 +57,7 @@ def test_cli_pipeline_run_local_success():
             continue
         if rc == 0 and out:
             data = json.loads(out)
+            assert data["pipeline_id"] == "sample"
             assert data["status"] == "completed"
             assert data["artifacts"] == ["result"]
             assert "run_id" in data
