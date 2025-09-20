@@ -123,7 +123,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             self._swap_to_in_memory(exc)
 
     def _swap_to_in_memory(self, reason: Exception | str | None = None) -> None:
-        if isinstance(self.limiter, InMemoryBucketLimiter):
+        current_limiter = getattr(self, "limiter", None)
+        if isinstance(current_limiter, InMemoryBucketLimiter):
             return
 
         if reason is not None:
@@ -150,17 +151,23 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return self.limiter.allow(token, needed=needed)
 
     async def dispatch(self, request: Request, call_next):
-        if (
-            self.limiter
-            and request.url.path.startswith(settings.api_prefix)
-        ):
-            client_host = self._resolve_client_host(request)
-            if client_host and not self._allow_or_fallback(f"ip:{client_host}"):
-                return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
+        if self.limiter:
+            raw_prefix = settings.api_prefix or ""
+            if raw_prefix and not raw_prefix.startswith("/"):
+                raw_prefix = f"/{raw_prefix}"
 
-            api_key = request.headers.get("X-API-Key")
-            if api_key and not self._allow_or_fallback(f"key:{api_key}"):
-                return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
+            normalized_prefix = raw_prefix.rstrip("/") + "/"
+            base_prefix = normalized_prefix[:-1]
+            path = request.url.path
+
+            if path == base_prefix or path.startswith(normalized_prefix):
+                client_host = self._resolve_client_host(request)
+                if client_host and not self._allow_or_fallback(f"ip:{client_host}"):
+                    return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
+
+                api_key = request.headers.get("X-API-Key")
+                if api_key and not self._allow_or_fallback(f"key:{api_key}"):
+                    return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
         return await call_next(request)
 
     def _resolve_client_host(self, request: Request) -> str | None:
