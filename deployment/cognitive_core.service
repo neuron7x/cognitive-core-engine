@@ -1,4 +1,3 @@
-
 [Unit]
 Description=Cognitive Core API
 After=network.target
@@ -7,13 +6,9 @@ After=network.target
 User=www-data
 Group=www-data
 WorkingDirectory=/opt/cognitive-core
-Environment=DATABASE_URL=postgresql+psycopg2://cce:cce@localhost:5432/cce
-Environment=REDIS_URL=redis://localhost:6379/0
-Environment=COG_API_KEY=changeme
-Environment=COG_APP_NAME=Cognitive Core Engine
-Environment=COG_API_PREFIX=/api
-Environment=COG_RATE_LIMIT_RPS=5
-Environment=COG_RATE_LIMIT_BURST=10
+# Load secrets and runtime configuration from a dedicated environment file.
+# See docs/operations.md for details on generating secure values.
+EnvironmentFile=/etc/cognitive-core.env
 ExecStart=/opt/cognitive-core/.venv/bin/uvicorn cognitive_core.api.main:app --host 0.0.0.0 --port 8000
 Restart=on-failure
 RestartSec=5s
