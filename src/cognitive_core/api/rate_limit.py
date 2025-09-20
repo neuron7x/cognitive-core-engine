@@ -107,6 +107,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             "refill_per_sec": settings.rate_limit_rps,
         }
         self._limiter_kwargs = limiter_kwargs
+        self.limiter = None
 
         if RedisBucketLimiter is None:
             reason = _redis_import_error or "redis client not available"
@@ -150,10 +151,28 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return self.limiter.allow(token, needed=needed)
 
     async def dispatch(self, request: Request, call_next):
-        if (
+        raw_prefix = settings.api_prefix or ""
+        normalized_prefix = raw_prefix.rstrip("/")
+        if not normalized_prefix and raw_prefix:
+            normalized_prefix = raw_prefix
+        if normalized_prefix and not normalized_prefix.endswith("/"):
+            normalized_prefix = f"{normalized_prefix}/"
+
+        if normalized_prefix:
+            base_path = normalized_prefix if normalized_prefix == "/" else normalized_prefix[:-1]
+        else:
+            base_path = ""
+
+        path = request.url.path
+        is_api_request = bool(
             self.limiter
-            and request.url.path.startswith(settings.api_prefix)
-        ):
+            and (
+                (base_path and path == base_path)
+                or (normalized_prefix and path.startswith(normalized_prefix))
+            )
+        )
+
+        if is_api_request:
             client_host = self._resolve_client_host(request)
             if client_host and not self._allow_or_fallback(f"ip:{client_host}"):
                 return Response(status_code=status.HTTP_429_TOO_MANY_REQUESTS)

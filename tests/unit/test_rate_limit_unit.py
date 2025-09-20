@@ -73,3 +73,47 @@ def test_in_memory_rate_limiter_enforces_limits(monkeypatch):
 
     assert first.status_code == 200
     assert second.status_code == 429
+
+
+def test_similar_prefix_routes_bypass_rate_limiter(monkeypatch):
+    class FailingLimiter:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("redis missing")
+
+    monkeypatch.setattr(
+        "cognitive_core.api.rate_limit.RedisBucketLimiter", FailingLimiter
+    )
+    monkeypatch.setattr(settings, "rate_limit_burst", 1)
+    monkeypatch.setattr(settings, "rate_limit_rps", 0.0)
+    monkeypatch.setattr(rate_limit, "settings", settings)
+
+    app = FastAPI()
+    app.add_middleware(RateLimitMiddleware)
+
+    @app.get("/api/test")
+    def read_api() -> dict[str, bool]:
+        return {"ok": True}
+
+    @app.get("/apiary")
+    def read_apiary() -> dict[str, bool]:
+        return {"ok": True}
+
+    @app.get("/api-admin")
+    def read_api_admin() -> dict[str, bool]:
+        return {"ok": True}
+
+    with TestClient(app) as client:
+        headers = {"X-API-Key": "fallback"}
+        first_apiary = client.get("/apiary", headers=headers)
+        second_apiary = client.get("/apiary", headers=headers)
+        first_admin = client.get("/api-admin", headers=headers)
+        second_admin = client.get("/api-admin", headers=headers)
+        allowed_api = client.get("/api/test", headers=headers)
+        throttled_api = client.get("/api/test", headers=headers)
+
+    assert first_apiary.status_code == 200
+    assert second_apiary.status_code == 200
+    assert first_admin.status_code == 200
+    assert second_admin.status_code == 200
+    assert allowed_api.status_code == 200
+    assert throttled_api.status_code == 429
