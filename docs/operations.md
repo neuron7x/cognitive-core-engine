@@ -91,3 +91,7 @@ Steps:
    docker run -p 9090:9090 prom/prometheus
    ```
 3. Configure an OpenTelemetry collector (or Jaeger) and set `OTEL_EXPORTER_OTLP_ENDPOINT` to forward traces.
+4. Для локального дебагу можна тимчасово ввімкнути консольний експортер
+   трасування, експортувавши `COG_TELEMETRY_CONSOLE_EXPORT=true` перед запуском
+   сервісу. Не забудьте вимкнути прапорець у продакшні, щоб уникнути зайвого
+   навантаження та шуму в логах.

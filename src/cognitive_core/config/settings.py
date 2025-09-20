@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     app_name: str = "Cognitive Core Engine"
     api_prefix: str = "/api"
     debug: bool = False
+    telemetry_console_export: bool = Field(
+        default=False,
+        description=(
+            "Enable the OpenTelemetry console span exporter for local debugging. "
+            "Keep disabled in production to avoid noisy synchronous logging."
+        ),
+    )
     api_key: str = Field(
         default="",
         description=(

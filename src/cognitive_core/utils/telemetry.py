@@ -35,13 +35,28 @@ REQUEST_LATENCY = Histogram("request_latency_seconds", "Request latency", ["rout
 LLM_TOKENS = Counter("llm_tokens_total", "LLM tokens processed", ["route"])
 
 
-def setup_telemetry(service_name: str = "cognitive-core-engine") -> None:
-    """Initialise tracing providers if OpenTelemetry is available."""
+def setup_telemetry(
+    service_name: str = "cognitive-core-engine",
+    *,
+    enable_console_export: bool = False,
+) -> None:
+    """Initialise tracing providers if OpenTelemetry is available.
+
+    Parameters
+    ----------
+    service_name:
+        Identifier attached to emitted spans.
+    enable_console_export:
+        When ``True`` register the ``ConsoleSpanExporter`` for local debugging.
+        By default spans are not exported to avoid the significant overhead of
+        synchronous console logging in production deployments.
+    """
     if trace is None:  # pragma: no cover - graceful degradation
         return
     resource = Resource(attributes={SERVICE_NAME: service_name})
     provider = TracerProvider(resource=resource)
-    provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+    if enable_console_export:
+        provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
     trace.set_tracer_provider(provider)
 
 

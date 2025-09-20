@@ -15,7 +15,7 @@ except Exception:  # pragma: no cover - fallback
         return b""
 from .routers import events, health, math, pipelines
 
-setup_telemetry(settings.app_name)
+setup_telemetry(settings.app_name, enable_console_export=settings.telemetry_console_export)
 app = FastAPI(title=settings.app_name, dependencies=[Depends(verify_api_key)])
 app.add_middleware(
     CORSMiddleware,
