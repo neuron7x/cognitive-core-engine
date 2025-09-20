@@ -20,6 +20,7 @@ class AgentsRouter:
     def __init__(self, config_dir: str | Path = "config/agents"):
         self.config_dir = Path(config_dir).resolve()
         self.provider = get_provider()
+        self._role_cache: dict[str, tuple[float, AgentConfig]] = {}
 
     # ------------------------------------------------------------------
     # Configuration helpers
@@ -44,6 +45,12 @@ class AgentsRouter:
         if not path.is_file():
             raise ValueError(f"Role definition '{name}' not found in agents configuration directory.")
 
+        mtime = path.stat().st_mtime
+
+        cached = self._role_cache.get(name)
+        if cached and cached[0] == mtime:
+            return cached[1]
+
         with path.open() as f:
             if yaml:
                 data = yaml.safe_load(f) or {}
@@ -58,7 +65,9 @@ class AgentsRouter:
                         data[k.strip()] = v.strip().strip('"').strip("'")
         role = Role(name=data.get("name", name), system_prompt=data.get("system_prompt", ""))
         model = data.get("model", "mock")
-        return AgentConfig(role=role, model=model)
+        config = AgentConfig(role=role, model=model)
+        self._role_cache[name] = (mtime, config)
+        return config
 
     def _prepare_prompt(self, cfg: AgentConfig, prompt: str) -> str:
         return f"{cfg.role.system_prompt}\n\n{prompt}" if cfg.role.system_prompt else prompt
