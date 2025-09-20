@@ -1,4 +1,1 @@
 -e .[api,test,dev,docs]
-fastapi>=0.111,<0.120
-httpx>=0.25,<0.29
-pytest>=7.4,<8.0
