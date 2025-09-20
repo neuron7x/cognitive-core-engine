@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import time
@@ -74,8 +75,12 @@ class RedisBucketLimiter:
             allowed = int(res[0]) == 1
             return allowed
         except Exception as exc:
+            token_digest = hashlib.sha256(token.encode("utf-8")).hexdigest()[:12]
             logger.warning(
-                "Redis rate limiter error for token '%s': %s", token, exc, exc_info=True
+                "Redis rate limiter error for token hash '%s': %s",
+                token_digest,
+                exc,
+                exc_info=True,
             )
             raise RateLimiterUnavailableError("redis rate limiter unavailable") from exc
 
