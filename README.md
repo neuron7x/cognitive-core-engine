@@ -158,7 +158,7 @@ cogctl solve2x2 1 2 3 4 5 6
 
 # Запуск пайплайна з локального реєстру
 cogctl pipeline run --name sample
-# -> {"run_id": "...", "status": "completed", "artifacts": ["result"]}
+# -> {"pipeline_id": "sample", "run_id": "...", "status": "completed", "artifacts": ["result"]}
 
 # Виконання через API (потрібен запущений бекенд на http://localhost:8000)
 cogctl pipeline run --name sample --api-url http://localhost:8000
