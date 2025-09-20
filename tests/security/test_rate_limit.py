@@ -1,4 +1,7 @@
+import hashlib
 import importlib
+import logging
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -6,6 +9,7 @@ from fastapi.testclient import TestClient
 from cognitive_core.api import auth, rate_limit
 from cognitive_core.api import main
 from cognitive_core import config
+import cognitive_core.rate_limiter as core_rate_limiter
 from cognitive_core.rate_limiter import RateLimiterUnavailableError
 
 
@@ -209,3 +213,30 @@ def test_in_memory_limiter_prunes_tokens_when_no_refill(monkeypatch):
 
     assert limiter._state == {}
     assert not limiter._expirations
+
+
+def test_redis_limiter_logs_redacted_token(monkeypatch, caplog):
+    token = "super-secret-token"
+    token_digest = hashlib.sha256(token.encode("utf-8")).hexdigest()[:12]
+
+    class FakeRedisClient:
+        def script_load(self, script: str):  # pragma: no cover - simple stub
+            return "sha"
+
+        def evalsha(self, sha: str, num_keys: int, *args):
+            raise RuntimeError("redis boom")
+
+    fake_redis_module = SimpleNamespace(from_url=lambda *args, **kwargs: FakeRedisClient())
+
+    monkeypatch.setattr(core_rate_limiter, "redis", fake_redis_module)
+
+    limiter = core_rate_limiter.RedisBucketLimiter(redis_url="redis://fake", bucket_key="test")
+
+    with caplog.at_level(logging.WARNING, logger=core_rate_limiter.logger.name):
+        with pytest.raises(core_rate_limiter.RateLimiterUnavailableError):
+            limiter.allow(token)
+
+    assert caplog.records, "expected a warning log entry"
+    message = caplog.records[0].getMessage()
+    assert token not in message
+    assert token_digest in message
