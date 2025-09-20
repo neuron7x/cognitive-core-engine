@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any, Iterable
 
+from . import __version__
 from .app.services import dot as dot_service
 from .core.math_utils import solve_2x2
 from .core.pipeline_executor import PipelineExecutor
@@ -164,6 +165,7 @@ def _run_pipeline(name: str, api_url: str | None) -> dict[str, Any]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="cogctl")
+    parser.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     # basic math helpers kept for compatibility
