@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import heapq
 import logging
+import re
 import threading
 import time
 
@@ -10,8 +11,6 @@ import ipaddress
 from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-from uvicorn.middleware.proxy_headers import _parse_raw_hosts
-
 from ..config import settings
 
 _redis_import_error: Exception | None = None
@@ -26,6 +25,30 @@ else:
 
 
 logger = logging.getLogger(__name__)
+
+
+_PROXY_SPLIT_RE = re.compile(r"[\s,]+")
+
+
+def _parse_proxy_hosts(value: str | None) -> list[str]:
+    """Parse proxy-provided host headers into candidate IP strings."""
+
+    if not value:
+        return []
+
+    hosts: list[str] = []
+    for item in _PROXY_SPLIT_RE.split(value):
+        candidate = item.strip()
+        if not candidate:
+            continue
+        if candidate.startswith("\"") and candidate.endswith("\""):
+            candidate = candidate[1:-1]
+        if candidate.startswith("[") and candidate.endswith("]"):
+            candidate = candidate[1:-1]
+        if candidate:
+            hosts.append(candidate)
+
+    return hosts
 
 
 class InMemoryBucketLimiter:
@@ -107,6 +130,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             "refill_per_sec": settings.rate_limit_rps,
         }
         self._limiter_kwargs = limiter_kwargs
+        self.limiter = None
 
         if RedisBucketLimiter is None:
             reason = _redis_import_error or "redis client not available"
@@ -170,16 +194,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             header_name = settings.trusted_proxy_header
             if header_name:
                 header_value = request.headers.get(header_name)
-                if header_value:
-                    for raw_host in _parse_raw_hosts(header_value):
-                        host = raw_host.strip()
-                        if not host:
-                            continue
-                        try:
-                            ip = ipaddress.ip_address(host)
-                        except ValueError:
-                            continue
-                        if ip.is_global:
-                            return host
+                for host in _parse_proxy_hosts(header_value):
+                    try:
+                        ip = ipaddress.ip_address(host)
+                    except ValueError:
+                        continue
+                    if ip.is_global:
+                        return host
 
         return client_host
