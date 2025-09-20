@@ -68,6 +68,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f pyproject.toml ]; then pip install -e .[api,test]; fi
           pip install ruff mypy bandit safety pytest coverage
+      - run: mkdir -p reports
       - name: Check Python lock files
         run: |
           if [ -f pyproject.toml ] && [ -f requirements.lock ]; then
@@ -123,6 +124,7 @@ jobs:
         run: npx eslint . || true
       - name: Typecheck
         run: npx tsc -p . || true
+      - run: mkdir -p reports
       - name: NPM Audit
         run: npm audit --json > reports/npm-audit.json || true
       - name: Jest
