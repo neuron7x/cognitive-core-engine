@@ -48,6 +48,8 @@ uvicorn cognitive_core.api.main:app --host 0.0.0.0 --port 8000
 
 ## Живі приклади
 
+> Перед зверненням до HTTP API експортуйте `COG_API_KEY` (або використайте `COGCTL_API_KEY`), щоб `curl` додавав заголовок `X-API-Key` автоматично: `export COG_API_KEY=your_api_key`.
+
 | Сценарій | Команда | Очікуваний результат |
 | --- | --- | --- |
 | Перевірити роботу CLI | `cogctl ping` | `pong` |
@@ -59,7 +61,7 @@ engine = VectorEngine()
 result = engine.dot([1, 2, 3], [4, 5, 6])
 print(result)
 PY` | `32.0` в стандартному виводі |
-| Перевірити API | `curl -s http://localhost:8000/api/health` | `{ "status": "ok" }` |
+| Перевірити API | `curl -s -H "X-API-Key: $COG_API_KEY" http://localhost:8000/api/health` | `{ "status": "ok" }` |
 
 > **Порада.** У CLI та HTTP API доступні й інші пайплайни (розв'язувач систем, нормалізація векторів тощо). Скористайтесь `cogctl --help` або відкрийте [інтерактивну документацію FastAPI](http://localhost:8000/docs), щоб переглянути повний перелік доступних команд та маршрутів.
 
@@ -85,12 +87,16 @@ docker run --rm -p 8000:8000 cognitive-core:local
 Докладніше див. [docs/api.md](docs/api.md).
 
 ```bash
+# Перед виконанням експортуйте ключ доступу
+export COG_API_KEY=your_api_key
+
 # Перевірка стану сервісу
-curl -s http://localhost:8000/api/health
+curl -s -H "X-API-Key: $COG_API_KEY" http://localhost:8000/api/health
 # -> {"status": "ok"}
 
 # Обчислення скалярного добутку
 curl -s -X POST http://localhost:8000/api/dot \
+  -H "X-API-Key: $COG_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"a": [1, 2, 3], "b": [4, 5, 6]}'
 # -> {"result": 32.0}
