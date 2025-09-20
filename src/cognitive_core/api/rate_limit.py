@@ -82,8 +82,16 @@ class InMemoryBucketLimiter:
         with self._lock:
             self._prune_expired(now)
 
-            tokens, last_ts, _ = self._state.get(token, (self.capacity, now, now))
-            tokens = min(self.capacity, tokens + (now - last_ts) * self.refill_per_sec)
+            state = self._state.get(token)
+            if state is not None:
+                tokens, last_ts, expiry = state
+            else:
+                tokens, last_ts, expiry = self.capacity, now, now
+
+            if self.refill_per_sec > 0:
+                tokens = min(
+                    self.capacity, tokens + (now - last_ts) * self.refill_per_sec
+                )
             allowed = tokens >= needed
             if allowed:
                 tokens -= needed
@@ -95,9 +103,10 @@ class InMemoryBucketLimiter:
                     self._state[token] = (tokens, now, expiry)
                     heapq.heappush(self._expirations, (expiry, token))
                 else:
-                    expiry = now + self.NO_REFILL_TTL
+                    if state is None:
+                        expiry = now + self.NO_REFILL_TTL
+                        heapq.heappush(self._expirations, (expiry, token))
                     self._state[token] = (tokens, now, expiry)
-                    heapq.heappush(self._expirations, (expiry, token))
             return allowed
 
 

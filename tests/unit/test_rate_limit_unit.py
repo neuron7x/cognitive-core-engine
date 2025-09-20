@@ -76,6 +76,22 @@ def test_in_memory_rate_limiter_enforces_limits(monkeypatch):
     assert second.status_code == 429
 
 
+def test_in_memory_no_refill_heap_usage_bounded():
+    limiter = InMemoryBucketLimiter(capacity=3, refill_per_sec=0.0)
+    token = "no-refill"
+
+    assert limiter.allow(token)
+    assert limiter.allow(token)
+    assert limiter.allow(token)
+
+    for _ in range(1000):
+        assert not limiter.allow(token)
+
+    assert len(limiter._expirations) <= 1
+    if limiter._expirations:
+        assert limiter._expirations[0][1] == token
+
+
 def test_resolve_client_host_prefers_first_global_ip_from_proxy(monkeypatch):
     monkeypatch.setattr(rate_limit, "RedisBucketLimiter", InMemoryBucketLimiter)
     monkeypatch.setattr(settings, "trust_proxy_headers", True)
