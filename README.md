@@ -53,12 +53,11 @@ uvicorn cognitive_core.api.main:app --host 0.0.0.0 --port 8000
 | Перевірити роботу CLI | `cogctl ping` | `pong` |
 | Обчислити скалярний добуток | `cogctl dotv 1,2,3 4,5,6` | `{ "dot": 32.0 }` |
 | Виконати пайплайн у Python | `python - <<'PY'
-from cognitive_core.engine import VectorEngine
+from cognitive_core.app.services import dot
 
-engine = VectorEngine()
-result = engine.dot([1, 2, 3], [4, 5, 6])
+result = dot([1, 2, 3], [4, 5, 6])
 print(result)
-PY` | `32.0` в стандартному виводі |
+PY` | `32.0` у стандартному виводі |
 | Перевірити API | `curl -s http://localhost:8000/api/health` | `{ "status": "ok" }` |
 
 > **Порада.** У CLI та HTTP API доступні й інші пайплайни (розв'язувач систем, нормалізація векторів тощо). Скористайтесь `cogctl --help` або відкрийте [інтерактивну документацію FastAPI](http://localhost:8000/docs), щоб переглянути повний перелік доступних команд та маршрутів.
