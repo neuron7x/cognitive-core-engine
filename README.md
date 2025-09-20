@@ -50,7 +50,7 @@ uvicorn cognitive_core.api.main:app --host 0.0.0.0 --port 8000
 
 | Сценарій | Команда | Очікуваний результат |
 | --- | --- | --- |
-| Перевірити роботу CLI | `cogctl status` | JSON зі станом сервісів та версією рушія |
+| Перевірити роботу CLI | `cogctl ping` | `pong` |
 | Обчислити скалярний добуток | `cogctl dotv 1,2,3 4,5,6` | `{ "dot": 32.0 }` |
 | Виконати пайплайн у Python | `python - <<'PY'
 from cognitive_core.engine import VectorEngine
